@@ -6,7 +6,7 @@ with open('README.md', 'r') as fp:
     long_description = fp.read()
     
 setuptools.setup(
-     name         = 'kctools',  
+     name         = 'kctools',
      version      = '0.0.1',
      author       = 'kevin c. stokely',
      author_email = 'kcstokely@gmail.com',
