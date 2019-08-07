@@ -4,6 +4,7 @@ __author__  = 'kcstokely'
 __version__ = '0.0.6'
 
 import re
+import string
 import logging
 
 import numpy as np
@@ -29,8 +30,8 @@ def html_strip(text):
 
 ##########################################################################################################################################################
 
-def rep_punc(token):
-    return ''.join(list(map(lambda y: y if y not in string.punctuation else ' ', list(token))))
+def rep_punc(text):
+    return ''.join(list(map(lambda y: y if y not in string.punctuation else ' ', list(text))))
 
 ##########################################################################################################################################################
 
