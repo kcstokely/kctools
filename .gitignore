@@ -2,7 +2,8 @@
 *
 # whitelist
 !.gitignore
-!kctools.py
+!kctools/
+!kctools/*
 !README.md
 !LICENSE
 !setup.py
