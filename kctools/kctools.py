@@ -3,7 +3,7 @@
 ### HELLO:
 
 __author__  = 'kcstokely'
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 import os
 import re
@@ -29,12 +29,13 @@ def lsdashr(tdir, abs = False):
 ### STRING FUNCTIONS:
 
 def sbool(inp):
-    assert isinstance(inp, str)
-    if inp.lower() in ['false', 'no', 'f', 'n', '0']:
-        return False
-    if inp.lower() in ['true', 'yes', 't', 'y', '1']:
-        return True
-    return None
+    if isinstance(inp, str):
+        if inp.lower() in ['false', 'no', 'f', 'n', '0']:
+            return False
+        if inp.lower() in ['true', 'yes', 't', 'y', '1']:
+            return True
+        return None
+    return bool(inp)
 
 ###########################
 
@@ -257,7 +258,7 @@ class Map(object):
     
     def _add_item(self, key):
         if not key in self.map:
-            self.map[key] = len(self)
+            self.map[key] = len(self) + self.off
             self.inv[len(self) + self.off - 1] = key
     
     def _rem_item(self, key):
