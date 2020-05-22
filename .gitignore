@@ -2,9 +2,9 @@
 *
 # whitelist
 !.gitignore
-!kctools/
-!kctools/*
 !README.md
 !LICENSE
-!setup.py
+!kctools/
+!classes/
+!*.py
 

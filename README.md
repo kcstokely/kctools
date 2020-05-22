@@ -1,4 +1,4 @@
 # kctools
 
-Things I don't want to recreate in every script I write.
+Things I don't want to recreate in each script I write.
 

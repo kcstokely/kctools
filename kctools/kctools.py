@@ -1,9 +1,4 @@
-##########################################################################################################################################################
-##########################################################################################################################################################
-### HELLO:
-
-__author__  = 'kcstokely'
-__version__ = '0.0.8'
+################################################################################################################################################
 
 import os
 import re
@@ -16,17 +11,19 @@ import datetime as dt
 
 from scipy.stats import beta
 
-##########################################################################################################################################################
-##########################################################################################################################################################
-### OS FUNCTIONS:
+################################################################################################################################################
+### OS:
 
-def lsdashr(tdir, abs = False):
+def readlines(fname, mode = 'r'):
+    with open(fname, mode) as fp:
+        return [ line.strip() for line in fp.readlines() ]
+
+def lsdashr(tdir, absolute = False):
     sdx = 0 if absolute else len(tdir)
     return [ os.path.join(dp, f)[sdx:] for dp, dn, fn in os.walk(tdir) for f in fn ]
 
-##########################################################################################################################################################
-##########################################################################################################################################################
-### STRING FUNCTIONS:
+################################################################################################################################################
+### STRINGS:
 
 def sbool(inp):
     if isinstance(inp, str):
@@ -45,7 +42,7 @@ def html_strip(text):
 ###########################
 
 def rep_punc(text):
-    return ''.join(list(map(lambda y: y if y not in string.punctuation else ' ', list(text))))
+    return ''.join([ y if not y in string.punctuation else ' ' for y in list(text) ])
 
 ###########################
 
@@ -54,50 +51,34 @@ def tnow():
 
 ###########################
 
-def make_dates(num_dates, up_to = 'yesterday', skip = 1, p_range = False):
-    if up_to == 'today':
-        end_date = dt.datetime.now().date()
-    elif up_to == 'yesterday':
-        end_date = dt.datetime.now().date() - dt.timedelta(days = 1)
-    elif isinstance(up_to, int):
-        end_date = dt.datetime.now().date() - dt.timedelta(days = up_to)
-    else:
-        end_date = dt.datetime.strptime(up_to, '%Y-%m-%d')
-    dates = []
-    for lag in range(num_dates-1, -1, -1):
-        date = end_date - dt.timedelta(days = lag*skip)
-        date = dt.datetime.strftime(date, '%Y-%m-%d')
-        dates.append(date)
-    if p_range:
-        starts = []
-        for lag in range(num_dates-1, -1, -1):
-            date = end_date - dt.timedelta(days = lag*skip+p_range-1)
-            date = dt.datetime.strftime(date, '%Y-%m-%d')
-            starts.append(date)
-        dates = list(zip(starts, dates))
-    return dates
+def prettify(n, l = 2, space = False):
+    m = np.abs(n)
+    e = int(np.floor(np.log10(m)))
+    d = min((e//3)*3, 12)
+    c = {0: '', 3: 'k', 6: 'M', 9: 'B', 12: 'T'}[d]
+    l = min(e+1, l)
+    r = mround(m, np.power(10, max(e-l+1, 0)))/np.power(10, d)
+    r = int(r) if (e-d+1 >= l) else r
+    return f'{"-" if n < 0 else ""}{r}{" " if space else ""}{c}'
 
-##########################################################################################################################################################
-##########################################################################################################################################################
-### GENERAL FUNCTIONS:
-
-def mround(x, m):
-    return int(m * round(float(x)/m))
-
-###########################
+################################################################################################################################################
+### LISTS:
 
 def only_one(thing):
     return sum(map(bool, thing)) == 1
 
 ###########################
 
-def split_into_chunks(n, m):
-    return [ n//m + (i<n%m) for i in range(m) ]
+def split_into_rows(inlist, m = 5):
+    return [ inlist[i:i+m] for i in range(0, len(inlist), m) ]
 
 ###########################
 
-def rowify(inlist, width = 5):
-    return [ inlist[i:i+width] for i in range(0, len(inlist), width) ]
+def split_into_chunks(inlist, m = 10):
+    n = len(inlist)
+    r = [ n//m + (i<n%m) for i in range(m) ]
+    s = [0] + np.cumsum(r).tolist()
+    return  [ inlist[i:j] for i, j in zip(s[:-1], s[1:]) ]
 
 ###########################
 
@@ -112,9 +93,35 @@ def gram_getter(items, n, strjoin = False):
         grams = [ ' '.join(gram) for gram in grams ]
     return grams
 
-##########################################################################################################################################################
-##########################################################################################################################################################
-### NUMPY FUNCTIONS:
+###########################
+
+def where_in_thing(test, thing):
+    
+    def get_next_idxs_in_thing(test, thing, idxs = [], already = [], found = False):
+        if found or ((thing == test) and (idxs not in already)):
+            return idxs, True
+        if isinstance(thing, list):
+            for i, item in enumerate(thing):
+                new_idxs, new_found = get_next_idxs_in_thing(test, item, idxs+[i], already)    
+                if new_found:
+                    return new_idxs, True
+        return idxs, False
+
+    answers = []
+    ans, found = get_next_idxs_in_thing(test, thing)
+    while(found):
+        answers.append(ans)
+        ans, found = get_next_idxs_in_thing(test, thing, already = answers)
+    
+    return answers
+
+################################################################################################################################################
+### NUMBERS:
+
+def mround(x, m):
+    return int(m * round(float(x)/m))
+
+###########################
 
 def normalize(arr):
     return np.nan_to_num(np.divide(arr, np.sum(arr)))
@@ -162,49 +169,11 @@ def psort(arr, n):
 
 ###########################
 
-def rchoice(inlist, kwargs = {}):
-    return [] if inlist == [] else inlist[np.random.choice(list(range(len(inlist))), **kwargs)]
+def rchoice(*args, **kwargs):
+    return np.array([], dtype = object) if args and not args[0] else np.random.choice(*args, **kwargs)
 
-##########################################################################################################################################################
-##########################################################################################################################################################
-### BULLSHIT:
-
-def idxs_in_thing(test, thing, idxs = [], already = [], found = False):
-    if found or ((thing == test) and (idxs not in already)):
-        return idxs, True
-    if isinstance(thing, list):
-        for i, item in enumerate(thing):
-            new_idxs, new_found = idxs_in_thing(test, item, idxs+[i], already)    
-            if new_found:
-                return new_idxs, True
-    return idxs, False
-
-def all_idxs_in_thing(test, thing):
-    answers = []
-    ans, found = idxs_in_thing(test, thing)
-    while(found):
-        answers.append(ans)
-        ans, found = idxs_in_thing(test, thing, already = answers)
-    return answers
-
-##########################################################################################################################################################
-##########################################################################################################################################################
-### MISC FUNCTIONS:
-
-# call this with __name__ as first argument
-def setup_logger(name, log_file = 'this.log', log_dir = './', mode = 'a', level = logging.INFO):
-    assert mode in ['a', 'w']
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    f_handler = logging.FileHandler(os.path.join(log_dir, log_file), mode)
-    f_handler.setLevel(level)
-    f_handler.setFormatter(logging.Formatter(fmt=f'%(asctime)s - %(levelname)8s: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S'))
-    logger.addHandler(f_handler)
-    return logger
-
-###########################
+################################################################################################################################################
+### PANDAS:
 
 def rename_dup_df_cols(df):
     names = pd.Series(df.columns)
@@ -213,100 +182,25 @@ def rename_dup_df_cols(df):
         if not isinstance(d_mask, int):
             names[d_mask] = [ dup + '.' + str(ddx) for ddx in range(d_mask.sum()) ]
     df.columns = names
-    
-##########################################################################################################################################################
-##########################################################################################################################################################
-### CLASS:
 
-class Map(object):
+################################################################################################################################################
+### LOGGING:
 
-    ###############
-    
-    def __init__(self, items = [], offset = 0):
-        assert isinstance(offset, int), 'Offset is not an integer.'
-        assert not (offset < 0), 'Offset is not non-negative.'
-        self.off = offset
-        self.map = dict()
-        self.inv = dict()
-        self.add(items)
-        
-    def __len__(self):
-        return len(self.map)
-    
-    def __repr__(self):
-        return repr(self.map)
-    
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            return self.inv[key]
-        else:
-            try:
-                return self.map[key]
-            except:
-                self._add_item(key)
-                return self.map[key]
-    
-    ###############
-    
-    def keys(self):
-        return self.map.keys()
-    
-    def values(self):
-        return self.map.values()
+def setup_logger(name, log_file = 'this.log', log_dir = './', mode = 'a', level = 'info'):
+    '''always call with __name__ as first argument'''
+    assert mode in ['a', 'w']
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    level = level if not isinstance(level, str) else getattr(logging, level)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    f_handler = logging.FileHandler(os.path.join(log_dir, log_file), mode)
+    f_handler.setLevel(level)
+    f_handler.setFormatter(logging.Formatter(fmt=f'%(asctime)s - %(levelname)8s: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S'))
+    logger.addHandler(f_handler)
+    return logger
 
-    ###############
-    
-    def _add_item(self, key):
-        if not key in self.map:
-            self.map[key] = len(self) + self.off
-            self.inv[len(self) + self.off - 1] = key
-    
-    def _rem_item(self, key):
-        if isinstance(key, int):
-            del self.map[self.inv[key]]
-            for k in range(key, self.off + len(self.map)):
-                self.inv[k] = self.inv[k+1]
-                self.map[self.inv[k]] = k
-            del self.inv[self.off + len(self.map)]
-        else:    
-            self._rem_item(self.map[key])    
-    
-    ###############
-    
-    def add(self, thing):    
-        if isinstance(thing, list) or isinstance(thing, tuple):
-            for item in thing:
-                self._add_item(item)
-        else:
-            self._add_item(thing)
-
-    def rem(self, thing):
-        if isinstance(thing, list) or isinstance(thing, tuple):
-            for item in thing:
-                self._rem_item(item)
-        else:
-            self._rem_item(thing)
-            
-    ###############
-            
-    def tolist(self, inp_dict):
-        out = [ None ] * len(self)
-        for key, value in inp_dict.items():
-            out[self[key]] = value
-        return out
-
-##########################################################################################################################################################
-
-
-
-
-
-
-
-
-
-
-
+################################################################################################################################################
 
 
 
