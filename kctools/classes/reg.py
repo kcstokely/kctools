@@ -1,7 +1,7 @@
-################################################################################################################################################
+################################################
 
 from abc import ABC, abstractmethod
-from collections import defaultdict as dd
+from collections import defaultdict
 
 ################################################
 
@@ -26,7 +26,7 @@ class Register(object):
     '''
 
     def __init__(self):
-        self._reg  = dd(list)
+        self._reg  = defaultdict(list)
     
     def register(self, obj, events = None):
         try:

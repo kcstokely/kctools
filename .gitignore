@@ -1,9 +1,12 @@
 # ignore everything
 *
+
 # whitelist
+
 !.gitignore
 !README.md
 !LICENSE
+
 !kctools/
 !classes/
 !*.py

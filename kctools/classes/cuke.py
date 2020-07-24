@@ -1,12 +1,13 @@
-##########################################################################################################################################################
+################################################
 
 import hashlib, os, pickle
 
 ################################################
 
-class Concombre(object):
+class Cuke(object):
     
     def __init__(self, name, c_dir = os.path.join(os.getcwd(), 'cukes'), ext = 'pkl', xhash = False, force = False):
+        assert name
         self.name = name
         self._dir = c_dir
         if not os.path.exists(c_dir):
@@ -26,11 +27,6 @@ class Concombre(object):
     def write(self):
         with open(self._path, 'wb') as fp:
             pickle.dump(self.__dict__.copy(), fp)
-        
-################################################
-
-Cucumber = Concombre
-Cuke = Cucumber
 
 ################################################
 

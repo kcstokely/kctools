@@ -1,4 +1,4 @@
-################################################################################################################################################
+################################################
 
 from kctools.classes.map import Map
 
@@ -107,10 +107,10 @@ class VecSet(Vector):
         set all attrs to the sum of the values found in 'slots'
         '''
         for attr, value in self._slots():
-            if not attr in ['map', 'slots']:
+            if not attr in ['_map', '_slots']:
                 setattr(self, attr, type(value)())
         for attr, value in self._slots.items():
-            if not attr in ['map', 'slots']:
+            if not attr in ['_map', '_slots']:
                 self.add(value)
     
     ###

@@ -1,4 +1,5 @@
-from .cuke import *
-from .map import *
-from .reg import *
-from .vec import *
+from .dicts import adict, odict
+from .cuke import Cuke
+from .map import Map
+from .reg import Register
+from .vec import Vector, VecSet

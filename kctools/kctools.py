@@ -1,4 +1,4 @@
-################################################################################################################################################
+########################################################################
 
 import os
 import re
@@ -11,7 +11,7 @@ import datetime as dt
 
 from scipy.stats import beta
 
-################################################################################################################################################
+########################################################################
 ### OS:
 
 def readlines(fname, mode = 'r'):
@@ -22,7 +22,7 @@ def lsdashr(tdir, absolute = False):
     sdx = 0 if absolute else len(tdir)
     return [ os.path.join(dp, f)[sdx:] for dp, dn, fn in os.walk(tdir) for f in fn ]
 
-################################################################################################################################################
+########################################################################
 ### STRINGS:
 
 def sbool(inp):
@@ -51,6 +51,16 @@ def tnow():
 
 ###########################
 
+def endify(n):
+    n = str(n)
+    if n:
+        d = list(n)[-1]
+        c = {'1': 'st', '2': 'nd', '3': 'rd'}
+        n = n + c.get(d, 'th')
+    return n
+    
+###########################
+
 def prettify(n, l = 2, space = False):
     m = np.abs(n)
     e = int(np.floor(np.log10(m)))
@@ -61,7 +71,7 @@ def prettify(n, l = 2, space = False):
     r = int(r) if (e-d+1 >= l) else r
     return f'{"-" if n < 0 else ""}{r}{" " if space else ""}{c}'
 
-################################################################################################################################################
+########################################################################
 ### LISTS:
 
 def only_one(thing):
@@ -115,11 +125,19 @@ def where_in_thing(test, thing):
     
     return answers
 
-################################################################################################################################################
+########################################################################
 ### NUMBERS:
 
 def mround(x, m):
     return int(m * round(float(x)/m))
+
+###########################
+
+def coalesce(*args):
+    a = 0
+    for i in args:
+        a = a + i + a*i
+    return a    
 
 ###########################
 
@@ -172,7 +190,7 @@ def psort(arr, n):
 def rchoice(*args, **kwargs):
     return np.array([], dtype = object) if args and not args[0] else np.random.choice(*args, **kwargs)
 
-################################################################################################################################################
+########################################################################
 ### PANDAS:
 
 def rename_dup_df_cols(df):
@@ -183,15 +201,15 @@ def rename_dup_df_cols(df):
             names[d_mask] = [ dup + '.' + str(ddx) for ddx in range(d_mask.sum()) ]
     df.columns = names
 
-################################################################################################################################################
+########################################################################
 ### LOGGING:
 
-def setup_logger(name, log_file = 'this.log', log_dir = './', mode = 'a', level = 'info'):
-    '''always call with __name__ as first argument'''
+def setup_logger(name, log_file = 'this.log', log_dir = '', mode = 'a', level = 'info'):
+    '''call with __name__ as first argument'''
     assert mode in ['a', 'w']
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    level = level if not isinstance(level, str) else getattr(logging, level)
+    level = level if not isinstance(level, str) else getattr(logging, level.upper())
     logger = logging.getLogger(name)
     logger.setLevel(level)
     f_handler = logging.FileHandler(os.path.join(log_dir, log_file), mode)
@@ -200,7 +218,7 @@ def setup_logger(name, log_file = 'this.log', log_dir = './', mode = 'a', level 
     logger.addHandler(f_handler)
     return logger
 
-################################################################################################################################################
+########################################################################
 
 
 

@@ -4,10 +4,10 @@ import setuptools
 
 with open('README.md', 'r') as fp:
     long_description = fp.read()
-    
+
 setuptools.setup(
      name         = 'kctools',
-     version      = '0.1.2',
+     version      = '0.1.3',
      author       = 'kevin c. stokely',
      author_email = 'kcstokely@gmail.com',
      description  = 'miscellaneous elves',

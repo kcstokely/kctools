@@ -1,25 +1,3 @@
-################################################################################################################################################
-
-class adict(dict):
-
-    def __add__(self, value):
-        try:
-            assert isinstance(value, dict)
-        except:
-            Exception(f"unsupported operand type(s) for +: 'adict' and '{type(value)}'")
-        for key, val in value.items():
-            if key in self:
-                self[key] = self[key] + val
-            else:
-                self[key] = val
-        
-    def __radd__(self, value):
-        try:
-            assert isinstance(value, dict)
-        except:
-            Exception(f"unsupported operand type(s) for +: '{type(value)}' and 'adict'")
-        return self.__add__(value)
-
 ################################################
 
 class Map(object):
@@ -108,7 +86,7 @@ class Map(object):
     def rem(self, thing):
         thing_two = self.get(thing)
         if type(thing) in (list, tuple):
-            for item in self.get(thing_two): #crashes if nested
+            for item in self.get(thing_two):
                 self.rem(item)
         else:
             self._rem_item(thing)
