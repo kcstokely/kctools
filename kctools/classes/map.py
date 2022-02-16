@@ -1,7 +1,36 @@
 ################################################
 
-class Map(object):
+class Map():
 
+    '''
+        This class maps non-integer types to consecutive
+          non-negative integers, beginning at 'offset'.
+
+        Generally, these non-integers will be strings.
+
+        Map.keys()   returns the strings, in order.
+        Map.values() returns the integers, in order.
+        Map.items()  returns the tuples, as expected.
+
+        Map[x] returns the corresponding value to x, ie:
+          if x is a string, it returns the mapped integer,
+          if x is an integer, it returns the mapped string.
+
+        Slicing is allowed.
+
+        Map.get(x) is equivalent to Map[x], but also allows that
+          x may be a (nested) list, in which case it returns the
+          expected list of mapped values, and 'None' for missing
+          elements.
+
+        Map.add(x) is equivalent to Map.get(x), except missing elements
+          will automatically be added, and the new mapped value returned.
+
+        Map.rem(x) is equivalent to Map.get(x), except any found elements
+          are then removed from the Map, with integers collapsing downward
+          as appropriate to keep them sequential.
+    '''
+    
     ###############
     
     def __init__(self, inp = [], offset = 0):

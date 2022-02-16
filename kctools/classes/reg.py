@@ -5,38 +5,40 @@ from collections import defaultdict
 
 ################################################
 
-class Register(object):
+class Register():
     
     '''
-    A Register() is a class with a register:
+        A Register() is a class with a register:
 
-      ._reg = {event: [obj1, obj2, obj3, ... ], ... }
+          ._reg = {event: [obj1, obj2, obj3, ... ], ... }
 
-      of objects which trigger on event.
+          of objects which trigger on an event.
 
-      Basically, you are a Register if you might
-        generate events.
+          Basically, you are a Register if you might
+            generate events.
 
-      Registered objects should have method:
-        .trigger(event, registrar)
-        
-      If it does not call .register() with events,
-        it should also have method:
-          .trigger_events()
+          The registered objects should have method:
+            .trigger(event, registrar)
+
+          If it does not call .register() with events,
+            it can also have method: .trigger_events()
     '''
 
     def __init__(self):
         self._reg  = defaultdict(list)
     
     def register(self, obj, events = None):
-        try:
-            for event in (events if events else obj.trigger_events()):
-                self._reg[event].append(obj)
-        except AttributeError:
-            pass
-                
+        if events is None:
+            try:
+                events = obj.trigger_events()
+            except AttributeError:
+                events = []
+        for event in events:
+            self._reg[event].append(obj)
+
     def deregister(self, obj, events = None):
-        for event in (events if events else self._reg):
+        events = events if events is not None else self._reg
+        for event in events:
             try:
                 self._reg[event].remove(obj)
             except KeyError:
@@ -50,6 +52,10 @@ class Register(object):
 ################################################
 
 def Triggerable(ABC):
+    
+    '''
+        You are triggerable if events affect you.
+    '''
     
     @abstractmethod
     def trigger(self, event, registrar):

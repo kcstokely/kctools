@@ -1,13 +1,10 @@
-# ignore everything
 *
-
-# whitelist
 
 !.gitignore
 !README.md
 !LICENSE
 
-!kctools/
-!classes/
+!/kctools/
+!/kctools/classes/
+!/kctools/classes/data/
 !*.py
-

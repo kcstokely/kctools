@@ -4,7 +4,7 @@ from kctools.classes.map import Map
 
 ################################################
 
-class Vector(object):
+class Vector():
     
     '''
     A Vector() is a class that can
@@ -16,13 +16,13 @@ class Vector(object):
         self._map = Map()
         self.set(inp, True)
  
-    def keys(self):
-        return self._map.keys()
+    def _keys(self):
+        return ( x for x in self._map.keys() )
     
-    def values(self):
+    def _values(self):
         return ( getattr(self, x) for x in self._map.keys() )
     
-    def items(self):
+    def _items(self):
         return ( (x, getattr(self, x)) for x in self._map.keys() )
     
     def __dict__(self):
@@ -35,7 +35,7 @@ class Vector(object):
         set all attributes to 'zero', by:
         self.attr = 0
         '''
-        for attr, value in self.items():
+        for attr, value in self._items():
             setattr(self, attr, type(value)())
         return self
     
@@ -47,7 +47,7 @@ class Vector(object):
         self.attr = inp.attr
         '''         
         for attr, value in inp.items():
-            if attr in self.keys() or add_new:
+            if attr in self._keys() or add_new:
                 self._map.add(attr)
                 setattr(self, attr, value)
         return self
@@ -60,7 +60,7 @@ class Vector(object):
         self.attr = self.attr + inp.attr
         '''
         for attr, value in inp.items():
-            if attr in self.keys():
+            if attr in self._keys():
                 if type(value) in [set, dict]:
                     value.update(inp)
                 else:
@@ -79,7 +79,7 @@ class Vector(object):
         '''
         for attr, value in inp.items():
             if type(value) in [int, float, complex]:
-                if attr in self.keys():
+                if attr in self._keys():
                     setattr(self, attr, getattr(self, attr) * value)
         return self
 
@@ -104,7 +104,7 @@ class VecSet(Vector):
     
     def reset(self):
         '''
-        set all attrs to the sum of the values found in 'slots'
+        set all attrs to the sum of the values found in _'slots'
         '''
         for attr, value in self._slots():
             if not attr in ['_map', '_slots']:

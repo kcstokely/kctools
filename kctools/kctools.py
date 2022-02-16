@@ -1,38 +1,39 @@
 ########################################################################
 
-import os
-import re
-import string
-import logging
-
+import logging, os, re, string
 import numpy as np
 import pandas as pd
 import datetime as dt
-
+from collections import *
 from scipy.stats import beta
 
 ########################################################################
 ### OS:
 
-def readlines(fname, mode = 'r'):
-    with open(fname, mode) as fp:
-        return [ line.strip() for line in fp.readlines() ]
-
 def lsdashr(tdir, absolute = False):
     sdx = 0 if absolute else len(tdir)
     return [ os.path.join(dp, f)[sdx:] for dp, dn, fn in os.walk(tdir) for f in fn ]
 
+def readlines(fname, mode = 'r'):
+    with open(fname, mode) as fp:
+        return [ line.strip() for line in fp.readlines() ]
+
 ########################################################################
 ### STRINGS:
 
-def sbool(inp):
+def lpad(text, x = 2):
+    return '\n'.join([ ''.join([' '] * x + list(line)) for line in text.split('\n') ])
+
+###########################
+
+def sbool(text):
     if isinstance(inp, str):
-        if inp.lower() in ['false', 'no', 'f', 'n', '0']:
+        if text.lower() in ['false', 'no', 'f', 'n', '0']:
             return False
-        if inp.lower() in ['true', 'yes', 't', 'y', '1']:
+        if text.lower() in ['true', 'yes', 't', 'y', '1']:
             return True
         return None
-    return bool(inp)
+    return bool(text)
 
 ###########################
 
@@ -40,6 +41,9 @@ def html_strip(text):
     return re.sub('<[^<]+?>', '', text)
 
 ###########################
+
+def rem_punc(text):
+    return ''.join([ y if not y in string.punctuation else '' for y in list(text) ])
 
 def rep_punc(text):
     return ''.join([ y if not y in string.punctuation else ' ' for y in list(text) ])
@@ -61,7 +65,7 @@ def endify(n):
     
 ###########################
 
-def prettify(n, l = 2, space = False):
+def humanify(n, l = 2, space = False):
     m = np.abs(n)
     e = int(np.floor(np.log10(m)))
     d = min((e//3)*3, 12)
@@ -126,18 +130,27 @@ def where_in_thing(test, thing):
     return answers
 
 ########################################################################
+### DICTS:
+
+def autovivify(levels = 2, final = int):
+    return defaultdict(final) if levels==1 else defaultdict(lambda: autovivify(final, levels-1))
+
+def mortify(thing):
+    return { k: mortify(v) for k, v in thing.items() } if isinstance(thing, dict) else thing
+
+########################################################################
 ### NUMBERS:
 
-def mround(x, m):
-    return int(m * round(float(x)/m))
+def coalesce(*nums):
+    a = 0
+    for i in nums:
+        a = a + i + a*i
+    return a    
 
 ###########################
 
-def coalesce(*args):
-    a = 0
-    for i in args:
-        a = a + i + a*i
-    return a    
+def mround(x, m):
+    return int(m * round(float(x)/m))
 
 ###########################
 
@@ -193,28 +206,28 @@ def rchoice(*args, **kwargs):
 ########################################################################
 ### PANDAS:
 
-def rename_dup_df_cols(df):
+def rename_dup_df_cols(df, sep = '.'):
     names = pd.Series(df.columns)
     for dup in df.columns.get_duplicates():
         d_mask = df.columns.get_loc(dup)
         if not isinstance(d_mask, int):
-            names[d_mask] = [ dup + '.' + str(ddx) for ddx in range(d_mask.sum()) ]
+            names[d_mask] = [ dup + sep + str(ddx) for ddx in range(d_mask.sum()) ]
     df.columns = names
 
 ########################################################################
 ### LOGGING:
 
-def setup_logger(name, log_file = 'this.log', log_dir = '', mode = 'a', level = 'info'):
-    '''call with __name__ as first argument'''
-    assert mode in ['a', 'w']
+def setup_logger(name = 'kcs', log_file = 'this.log', log_dir = '', mode = 'a', level = 'info'):
+    fmt = '%(asctime)s - %(levelname)4s: %(message)s'
+    datefmt = '%Y-%m-%d - %H:%M:%S'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    level = level if not isinstance(level, str) else getattr(logging, level.upper())
+    level = getattr(logging, level.upper()) if isinstance(level, str) else level
     logger = logging.getLogger(name)
     logger.setLevel(level)
     f_handler = logging.FileHandler(os.path.join(log_dir, log_file), mode)
     f_handler.setLevel(level)
-    f_handler.setFormatter(logging.Formatter(fmt=f'%(asctime)s - %(levelname)8s: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S'))
+    f_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
     logger.addHandler(f_handler)
     return logger
 
