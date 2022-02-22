@@ -4,6 +4,7 @@ import logging, os, re, string
 import numpy as np
 import pandas as pd
 import datetime as dt
+from copy import deepcopy
 from collections import *
 from scipy.stats import beta
 
@@ -137,6 +138,15 @@ def autovivify(levels = 2, final = int):
 
 def mortify(thing):
     return { k: mortify(v) for k, v in thing.items() } if isinstance(thing, dict) else thing
+
+def dict_merge(A, B):
+    A = deepcopy(A)
+    for key, value in B.items():
+        if key in A and isinstance(value, dict):
+            A[key] = dict_merge(A[key], value)
+        else:
+            A[key] = value
+    return A
 
 ########################################################################
 ### NUMBERS:
