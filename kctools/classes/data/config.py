@@ -1,6 +1,6 @@
 conf = {
 
-    # INTERVALS
+    # DIADS
     'p5':           (0, 7),
     '#5':           (0, 8),
     'b5':           (0, 6),
@@ -20,7 +20,7 @@ conf = {
     'maj b5 sus2':  (0, 2, 6),
     'maj sus aug4': (0, 6, 7),
 
-    # CHORDS
+    # TETRADS
     'maj7':          (0, 4, 7, 11),  
     'dom7':          (0, 4, 7, 10), 
     'mma7':          (0, 3, 7, 11), 
@@ -49,14 +49,15 @@ conf = {
     'maj7 ##5':      (0, 4, 9, 11),
     'maj7 ##5 sus4': (0, 5, 9, 11),
 
-    # FIVE
+    # PENTADS
     'major pentatonic':      (0, 2, 4, 7, 9),
+    'fucked-up pentatonic':  (0, 3, 6, 8, 10),
     
-    # SIX
+    # HEXADS
     'whole tone':            (0, 2, 4, 6, 8, 10),
     'augmented':             (0, 3, 4, 7, 8, 11),
     
-    # SEVEN
+    # SEPTADS
     'melodic major':         (0, 2, 4, 5, 7, 9, 11),
     'melodic minor':         (0, 2, 3, 5, 7, 9, 11),
     'harmonic major':        (0, 2, 4, 5, 7, 8, 11),
@@ -70,7 +71,7 @@ conf = {
     'neapolitan minor (R)':  (0, 1, 3, 5, 7, 8, 11),
     'neapolitan minor (L)':  (0, 2, 4, 6, 7, 8, 11),
 
-    # EIGHT
+    # OCTADS
     'dim7 / dim7':           (0, 2, 3, 5, 6, 8, 9, 11),
     'min6 / dim7':           (0, 2, 3, 5, 7, 8, 9, 11),
     'maj6 / dim7':           (0, 2, 4, 5, 7, 8, 9, 11),

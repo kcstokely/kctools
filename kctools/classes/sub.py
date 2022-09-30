@@ -1,15 +1,16 @@
 ################################################
 
+from collections import Counter
+
 import numpy as np
 import pandas as pd
-from collections import Counter
-from kctools import Lock, flatten, endify as _e
 
+from ..kctools import endify as _e
 from .data.config import conf as cf
 
 ################################################
 
-class N(Lock):
+class N():
     
     '''
         This class represents one or more
@@ -19,31 +20,32 @@ class N(Lock):
           for exploring the properties
           of collections of notes from 
           an L-tone musical scale.
+          
+        So generally, L will be twelve.
 
         All data is stored in self._hot:
           - it is an np.ndarray
           - it will either be 1-D or 2-D
           - if 1-D it is a 1-hot vector
-          - if 2-D it is like many 1-hots
-          - if 2-D it will be unique/sorted
+          - if 2-D it is N 1-hot vectors,
+          -   unique and sorted.
 
         All methods rely only on self._hot:
           - written to act on 1-D array
           - wrappers extend to act on 2-D
-          
+
         Most methods mutate self:
-          - use .copy() to preserve self
+          - use .copy() to protect self
     '''
 
     _L = 12 # overwrite to warp spacetime
     _conf = cf # overwrite to name things
+    _cmap = {v: k for k, v in cf.items()}
     
     ############ BIRTH
     
     def __init__(self, inp = []):
 
-        Lock.__init__(self)
-        
         if isinstance(inp, str):
             ndxs = N._conf[inp]
         elif isinstance(inp, int):
@@ -56,6 +58,8 @@ class N(Lock):
         self._hot = np.zeros(N._L, dtype=bool)
         self._hot[[ ndx%N._L for ndx in ndxs ]] = 1
     
+    ###
+    
     def __len__(self):
         return self._hot.shape[0] if self._hot.ndim > 1 else 1
 
@@ -67,6 +71,9 @@ class N(Lock):
 
     ############ EXTEND
 
+    def copy(self):
+        return N(self._hot)
+    
     def crush(self):
         # keeps 2-D arrays unique and sorted
         if self._hot.ndim > 1:
@@ -86,13 +93,13 @@ class N(Lock):
                 return method(self, *args, **kwargs)
             else:
                 self._hot = [ method(N(x), *args, **kwargs)._hot.tolist() for x in self._hot ]
-                self._hot = np.array(flatten(self._hot))
+                self._hot = np.array(self._hot).flatten()
                 self._hot = self._hot.reshape((self._hot.shape[0]//N._L, N._L))
                 return self.crush()
         return wrapped
     
     def tuple_mapper(method):
-        # extends tuple methods to act on 2-D arrays
+        # extends bool/int/tuple methods to act on 2-D arrays
         def wrapped(self, *args, **kwargs):
             if self._hot.ndim == 1:
                 return method(self, *args, **kwargs)
@@ -124,6 +131,32 @@ class N(Lock):
         if self.num():
             mdx = mdx % self.num()
             self.trans(self.notes()[mdx])
+        return self
+    
+    @array_mapper
+    def sharpen(self, ndx):
+        if self.num() and self.num() < N._L:
+            mdx = ndx
+            while not self._hot[mdx]:
+                mdx += 1
+            self._hot[mdx] = 0
+            mdx += 1
+            while self._hot[mdx]:
+                mdx += 1
+            self._hot[mdx] = 1
+        return self
+
+    @array_mapper
+    def flatten(self, ndx):
+        if self.num() and self.num() < N._L:
+            mdx = ndx
+            while not self._hot[mdx]:
+                mdx -= 1
+            self._hot[mdx] = 0
+            mdx -= 1
+            while self._hot[mdx]:
+                mdx -= 1
+            self._hot[mdx] = 1
         return self
 
     ############ MUTATE (one-way)
@@ -185,22 +218,31 @@ class N(Lock):
     @array_mapper
     def parents(self):
         self.compose()
-        zdxs = list(enumerate(self.copy().inv().notes()))
-        self._hot = np.tile(self._hot, len(zdxs))
-        self._hot = self._hot.reshape((len(zdxs), N._L))
-        for i, j in zdxs:
-            self._hot[i, j] = 1
+        if not self._hot.sum() == N._L:
+            zdxs = list(enumerate(self.copy().inv().notes()))
+            self._hot = np.tile(self._hot, len(zdxs))
+            self._hot = self._hot.reshape((len(zdxs), N._L))
+            for i, j in zdxs:
+                self._hot[i, j] = 1
         return self.crush()
 
     @array_mapper
     def children(self):
         self.compose()
-        ndxs = list(enumerate(self.notes()))
-        self._hot = np.tile(self._hot, len(ndxs))
-        self._hot = self._hot.reshape((len(ndxs), N._L))
-        for i, j in ndxs:
-            self._hot[i, j] = 0
+        if self._hot.sum():
+            ndxs = list(enumerate(self.notes()))
+            self._hot = np.tile(self._hot, len(ndxs))
+            self._hot = self._hot.reshape((len(ndxs), N._L))
+            for i, j in ndxs:
+                self._hot[i, j] = 0
         return self.crush()
+    
+    @array_mapper
+    def universe(self):
+        self._hot = np.zeros((2**N._L, N._L), dtype=bool)
+        for idx in range(2**N._L):
+            self._hot[idx, :] = N(idx)._hot
+        return self
     
     ############ PERSIST
     
@@ -231,28 +273,42 @@ class N(Lock):
         return tuple(np.where(self._hot)[0])
 
     @tuple_mapper
+    def string(self):
+        return ''.join([ 'x' if x else '_' for x in self.hot() ])
+    
+    @tuple_mapper
+    def forte(self):
+        x = self.num()
+        y = 1 + self.copy().modes()._hot.tolist().index(self.copy().canonical())
+        return (x, y)
+    
+    @tuple_mapper
+    def forte_string(self):
+        x = self.num()
+        y = 1 + self.copy().modes()._hot.tolist().index(self.copy().canonical())
+        return '-'.join(self.forte())
+    
+    @tuple_mapper
     def diff(self):
         return tuple(np.diff(list(self.notes())+[N._L+self.notes()[0]])) if self.notes() else ()
     
     @tuple_mapper
     def lookup(self):
-        cmap = { v: k for k, v in N._conf.items() }
-        name = cmap.get(self.notes())
+        name = N._cmap.get(self.notes())
         if not name:
             modes = self.copy().modes()
-            if len(modes) > 1:
-                for hot in modes._hot:
-                    mode = N(hot)
-                    name = cmap.get(mode.notes())
-                    if name:
-                        if not self._hot[0]:
-                            name = f'displaced mode of {name}'
-                        else:
-                            for mdx in range(self.num()):
-                                if (self._hot == mode.copy().roll(mdx)._hot).all():
-                                    name = f'{_e(mdx+1)} mode of {name}'
-                                    break
-                        break
+            for mode in modes._hot:
+                mode = N(mode)
+                name = N._cmap.get(mode.notes())
+                if name:
+                    if not self._hot[0]:
+                        name = f'disp. mode of {name}'
+                    else:
+                        for mdx in range(self.num()):
+                            if (self._hot == mode.copy().roll(mdx)._hot).all():
+                                name = f'{_e(mdx+1)} mode of {name}'
+                                break
+                    break
         return name if name else ''
     
     ############ SUMMARIZE
@@ -264,7 +320,7 @@ class N(Lock):
     @tuple_mapper
     def spin(self):
         return self.handedness() * self.symmetry()
-    
+
     @tuple_mapper
     def symmetry(self):
         for m in range(1, 1 + N._L):
@@ -336,30 +392,44 @@ class N(Lock):
         chords = ( self.copy().roll(mdx).chord(n_max).hot() for mdx in range(self.num()) )
         return tuple(zip(self.notes(), chords))
     
+    ### COMPARE
+    
+    @tuple_mapper
+    def contains(self, other):
+        if not isinstance(other, N):
+            other = N(other)
+        return other.copy()._hot == (self.copy().compose()._hot * other.copy()._hot)
+
+    @tuple_mapper
+    def contained(self, other):
+        if not isinstance(other, N):
+            other = N(other)
+        return other.contains(self)
+    
     ### UNIVERSE
     
     def dataframe(self, filt = None):
-            
-        # filt = hot / canon / ext_canon
-        
+
+        if isinstance(filt, str):
+            assert filt in ['hot', 'canon', 'ext_canon']
+
         cols  = ['hot', 'num', 'energy', 'symmetry']
         cols += ['ext_canonical', 'runs', 'gaps']
-        cols += ['canonical', 'handedness', 'lookup']
+        cols += ['canonical', 'handedness', 'string', 'lookup']
 
         rows = []
-        for idx in range(2**N._L):
-            n = N(idx)
+        hots = self._hot if self._hot.ndim > 1 else [self._hot]
+        for hot in hots:
             row = []
             for col in cols:
-                m = n.copy()
-                value = getattr(m, col)()
+                value = getattr(N(hot), col)()
                 value = value.hot() if isinstance(value, N) else value
                 row.append(value)
             rows.append(row)
         df = pd.DataFrame(rows, columns=cols)
 
         if filt:
-            
+
             # limit to first note present
             df['ok'] = df['hot'].apply(lambda x: x[0])
             df = df.drop(df[df['ok']==0].index).drop(['ok'], axis = 1)
@@ -394,7 +464,7 @@ class N(Lock):
                 df = df.set_index('ext_canonical', drop=True)
 
             df = df.sort_values(
-                by=['num', 'energy', 'symmetry', 'runs', 'gaps', 'handedness'],
+                by = ['num', 'energy', 'symmetry', 'runs', 'gaps', 'handedness'],
                 ascending = [True, True, False, False, False, False]
             )
 
@@ -402,13 +472,6 @@ class N(Lock):
 
 ################################################
 
-if __name__ == '__main__':
-    
-    n = N()
-    df = n.dataframe()
-
-
-
-
-
-
+if __name__ == '__main__':    
+    n  = N()
+    df = n.universe().dataframe()
