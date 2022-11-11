@@ -177,7 +177,7 @@ def setup_logger(
     logger.addHandler(s_handler)
     
     if path:
-        os.path.makedirs(os.path.dirname(path), exist_ok = True)
+        os.makedirs(os.path.dirname(path), exist_ok = True)
         f_handler = logging.FileHandler(path, mode)
         f_handler.setLevel(level)
         f_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
