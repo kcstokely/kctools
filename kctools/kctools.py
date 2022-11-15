@@ -1,6 +1,6 @@
 ########################################################################
 
-import logging, math, os, re, string
+import logging, math, os, re, string, sys
 import datetime as dt
 
 from copy        import deepcopy
@@ -164,14 +164,18 @@ def setup_logger(
         level = 'debug'
     ):
     
-    fmt     = '%(asctime)s - %(levelname)4s: %(message)s'
-    datefmt = '%Y-%m-%d - %H:%M:%S'
+    fmt     = '%(asctime)s  %(levelname).4s: %(message)s'
+    datefmt = '%Y.%m.%d  %H:%M:%S'
     level   = getattr(logging, level.upper()) if isinstance(level, str) else level
 
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    s_handler = logging.StreamHandler()
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            logger.removeHandler(handler)
+    
+    s_handler = logging.StreamHandler(stream=sys.stdout)
     s_handler.setLevel(level)
     s_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
     logger.addHandler(s_handler)
