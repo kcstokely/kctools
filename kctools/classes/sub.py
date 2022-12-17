@@ -410,6 +410,12 @@ class N():
     
     def dataframe(self, filt = None):
 
+        '''
+            Creates a panda of all 2**L sequences, or
+              optionally filtered down to a musically
+              relevant subset.
+        '''
+        
         if isinstance(filt, str):
             assert filt in ['hot', 'canon', 'ext_canon']
 

@@ -11,6 +11,8 @@ class odict(dict):
         However, overriding dict doesn't change dicts
           created with { ... } constructors, so it is
           of limited use.
+          
+        It can be nice for subclassing, though.
     '''
 
     def __getattr__(self, attr):

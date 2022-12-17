@@ -19,7 +19,7 @@ class Cuke():
         
         assert name
         self.name = str(name)
-        cuke_dir = absdir or os.path.join(os.getcwd(), rel_dir)
+        cuke_dir = abs_dir or os.path.join(os.getcwd(), rel_dir)
         os.makedirs(cuke_dir, exist_ok = True)
         token = name if not xhash else hashlib.md5(name.encode('utf-8')).hexdigest()
         self._path = os.path.join(cuke_dir, f'{token}.{ext}')

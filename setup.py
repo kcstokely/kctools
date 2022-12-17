@@ -6,7 +6,7 @@ with open('README.md', 'r') as fp:
 
 setuptools.setup(
     name             = 'kctools',
-    version          = '0.2.2',
+    version          = '0.2.3',
     author           = 'kevin c. stokely',
     author_email     = 'kcstokely@gmail.com',
     description      = 'miscellaneous elves',
@@ -18,6 +18,7 @@ setuptools.setup(
         'pandas',
         'scipy'
     ],
+    license = 'MIT',
     classifiers = [
          'Operating System :: OS Independent',
          'Programming Language :: Python :: 3',

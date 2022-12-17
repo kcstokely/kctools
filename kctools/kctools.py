@@ -159,14 +159,16 @@ def dict_update(A, B, new = False):
 
 def setup_logger(
         name,
-        path  = '',
-        mode  = 'a',
-        level = 'debug'
+        path    = '',
+        mode    = 'a',
+        level   = 'debug',
+        f_level = 'warning'
     ):
     
     fmt     = '%(asctime)s  %(levelname).4s: %(message)s'
     datefmt = '%Y.%m.%d  %H:%M:%S'
     level   = getattr(logging, level.upper()) if isinstance(level, str) else level
+    f_level = getattr(logging, f_level.upper()) if isinstance(f_level, str) else f_level
 
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -183,7 +185,7 @@ def setup_logger(
     if path:
         os.makedirs(os.path.dirname(path), exist_ok = True)
         f_handler = logging.FileHandler(path, mode)
-        f_handler.setLevel(level)
+        f_handler.setLevel(f_level)
         f_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
         logger.addHandler(f_handler)
     
@@ -195,9 +197,9 @@ def setup_logger(
 def mround(x, m):
     return int(m * round(float(x)/m))
 
-def coalesce(*these):
+def coalesce(*values):
     y = 0
-    for x in these:
+    for x in values:
         y = y + x + y*x
     return y
 
