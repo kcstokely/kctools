@@ -4,16 +4,21 @@ from .map import Map
 
 ################################################
 
-class Vector():
+class Vector(dict):
     
     '''
-        A Vector is a class that keeps track of attributes in a Map.
-        
-        It can zero itself, or set, add, or multiply with other Vectors,
-          or dicts.
+        A Vector is an ordered dict (it keeps track of its keys in a Map).
+
+        It can also zero itself, or set, add, or multiply with other dicts.
     '''
 
+    _RESTRICTED_ATTRS = [
+        'keys', 'values', 'items', 'snap', 'recall',
+        'nullify', 'set', 'add', 'mul', 'apply'
+    ]
+    
     def __init__(self, inp = {}):
+        self._R_ATTRS = Vector._RESTRICTED_ATTRS_
         self._map = Map()
         self.set(inp, True)
         self.snap()
@@ -21,14 +26,27 @@ class Vector():
     def __repr__(self):
         return str(list(self.items()))
     
+    def __getattr__(self, attr):
+        if attr in self._R_ATTRS or attr[0] == '_':
+            raise Exception(f'{attr} cannot be accessed as a class attribute.')
+        else:
+            return self[attr]
+        pass
+    
+    def __setattr__(self, attr, value):
+        if attr in self._R_ATTRS or attr[0] == '_':
+            raise Exception(f'{attr} cannot be set as a class attribute.')
+        else:
+            return self[attr] = value
+    
     def keys(self):
         return ( x for x in self._map.keys() )
     
     def values(self):
-        return ( getattr(self, x) for x in self._map.keys() )
+        return ( self[x] for x in self._map.keys() )
     
     def items(self):
-        return ( (x, getattr(self, x)) for x in self._map.keys() )
+        return ( (x, self[x]) for x in self._map.keys() )
     
     def snap(self):
         self._snap = self.values()
@@ -43,14 +61,13 @@ class Vector():
             set all attributes to 'zero', by:
             self.attr = 0
         '''
-        for attr, value in self._map.items():
-            setattr(self, attr, type(value)())
+        for attr, value in self.items():
+            self[attr] = type(value)()
         return self
     
     ###
 
     def set(self, inp, add_new = False):
-        assert type(inp) in [dict, Vector]
         '''
             set all attributes (found in 'inp'), by:
             self.attr = inp.attr
@@ -58,7 +75,7 @@ class Vector():
         for attr, value in inp.items():
             if attr in self._map or add_new:
                 self._map.add(attr)
-                setattr(self, attr, value) # oh no what if we overwrite this very function !?
+                self[attr] = value
         return self
     
     ###
@@ -74,39 +91,40 @@ class Vector():
                 if type(value) in [set, dict]:
                     value.update(inp)
                 else:
-                    setattr(self, attr, getattr(self, attr) + value)
+                    self[attr] = self[attr] + value
             elif add_new:
                 self._map.add(attr)
-                setattr(self, attr, value)
+                self[attr] = type(value)() + value
         return self
     
     ###
     
     def mul(self, inp, add_new = False):
-        assert type(inp) in [dict, Vector]
         '''
-            set all attributes (found in 'inp', if inp.attr is numeric), by:
+            set all attributes (found in 'inp'), by:
             self.attr = self.attr * inp.attr
         '''
         for attr, value in inp.items():
+            # numeric only
             if type(value) in [int, float, complex]:
                 if attr in self._map:
-                    setattr(self, attr, getattr(self, attr) * value)
+                    self[attr] = self[attr] * value
+                elif add_new:
+                    self[attr] = type(value)() * value
         return self
-    
+
     ###
     
     def apply(self, inp, func, add_new = False):
-        assert type(inp) in [dict, Vector]
         '''
             set all attributes (found in 'inp'), by:
             self.attr = func(self.attr, inp.attr)
         '''
         for attr, value in inp.items():
             if attr in self._map:
-                setattr(self, attr, func(getattr(self, attr), value))
+                self[attr] = func(self[attr], value)
             elif add_new:
-                setattr(self, attr, func(0, value))
+                self[attr] = func(type(value)(), value)
         return self
     
 ################################################
@@ -120,8 +138,13 @@ class VecSet(Vector):
           a named key.
     '''
 
+    _RESTRICTED_ATTRS = [
+        'load', 'unload'
+    ]
+    
     def __init__(self):
         Vector.__init__(self)
+        self._R_ATTRS += VecSet._RESTRICTED_ATTRS_
         self._slots = {}
 
     ###
