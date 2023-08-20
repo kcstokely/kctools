@@ -1,17 +1,67 @@
 ########################################################################
 
-import logging, math, os, re, string, sys
 import datetime as dt
+import logging, math, os, re, string, sys
 
 from copy        import deepcopy
-from collections import *
+from collections import defaultdict
+from importlib   import util
 
-import numpy  as np
-import pandas as pd
 
-from scipy.stats import beta
-from matplotlib  import pyplot as plt
+is_np  = util.find_spec('numpy') is not None
+is_pd  = util.find_spec('pandas') is not None
+is_sci = util.find_spec('scipy') is not None
+is_mpl = util.find_spec('matplotlib') is not None
 
+if is_np:
+    import numpy  as np
+
+if is_pd:    
+    import pandas as pd
+    
+if is_sci:    
+    from scipy.stats import beta
+      
+if is_mpl:
+    from matplotlib import pyplot as plt
+
+    
+def np_check(method):
+    def wrapped(*args, **kwargs):
+        if is_np:
+            return method(*args, **kwargs)
+        else:
+            raise Exception('Please install numpy.')
+    return wrapped
+
+
+def pd_check(method):
+    def wrapped(*args, **kwargs):
+        if is_pd:
+            return method(*args, **kwargs)
+        else:
+            raise Exception('Please install pandas.')
+    return wrapped
+
+
+def sci_check(method):
+    def wrapped(*args, **kwargs):
+        if is_sci:
+            return method(*args, **kwargs)
+        else:
+            raise Exception('Please install scipy.')
+    return wrapped
+
+                            
+def mpl_check(method):
+    def wrapped(*args, **kwargs):
+        if is_mpl:
+            return method(*args, **kwargs)
+        else:
+            raise Exception('Please install matplotlib.')
+    return wrapped
+
+########################################################################
 ########################################################################
 ### FILES:
 
@@ -23,6 +73,7 @@ def readlines(fname, mode = 'r'):
     with open(fname, mode) as fp:
         return [ line.strip() for line in fp.readlines() ]
 
+########################################################################
 ########################################################################
 ### STRINGS:
 
@@ -81,6 +132,7 @@ def humanify(n, l = 2, space = False):
     return f'{"-" if n < 0 else ""}{r}{" " if space else ""}{c}'
 
 ########################################################################
+########################################################################
 ### LISTS:
 
 def only_one(inlist):
@@ -135,17 +187,22 @@ def where_in_thing(test, thing):
     return answers
 
 ########################################################################
+########################################################################
 ### DICTS:
 
-def autovivify(levels = 2, final = int):
+def autovivify():
+    '''thanks eu'''
+    return defaultdict(lambda: autovivify())
+
+def vivify(levels = 2, final = int):
     '''thanks bert'''
-    return defaultdict(final) if levels==1 else defaultdict(lambda: autovivify(levels-1, final))
+    return defaultdict(final) if levels==1 else defaultdict(lambda: vivify(levels-1, final))
 
 def mortify(inp):
     return { k: mortify(v) for k, v in inp.items() } if isinstance(inp, dict) else inp
 
-def dict_update(A, B, new = False):
-    if new:
+def dict_update(A, B, inplace = False):
+    if not inplace:
         A = deepcopy(A)
     for key, value in B.items():
         if key in A and isinstance(value, dict):
@@ -154,6 +211,7 @@ def dict_update(A, B, new = False):
             A[key] = value
     return A
 
+########################################################################
 ########################################################################
 ### LOGGING:
 
@@ -192,6 +250,7 @@ def setup_logger(
     return logger
 
 ########################################################################
+########################################################################
 ### NUMBERS: 
 
 def mround(x, m):
@@ -204,68 +263,89 @@ def coalesce(*values):
     return y
 
 ########################################################################
+########################################################################
 ### NUMPY:
 
+@np_check
 def normalize(arr):
     return np.nan_to_num(np.divide(arr, np.sum(arr)))
 
 ###########################
 
+@np_check
 def is_diagonal(mtx):
     return not np.count_nonzero(mtx - np.diag(np.diagonal(mtx)))
 
 ###########################
 
+@np_check
 def kpow(x, p):
     return np.power(np.power(x, 1/p).mean(), p)
 
+@np_check
 def kcos(a, b):
     return np.nan_to_num(np.divide(np.dot(a, b), np.multiply(np.sqrt(np.square(a).sum()), np.sqrt(np.square(b).sum()))), copy=False)
 
 ###########################
 
+@np_check
 def bin_entropy(true, pred, eps = 0.0000001):
     return -np.sum( true * np.log(pred+eps) + (1-true) * np.log(1-pred+eps) )
 
+@np_check
 def mod_entropy(true, pred, mod = 2., eps = 0.0000001):
     return -np.sum( true * np.log(pred+eps) + (1-true) * (mod * pred) * np.log(1-pred+eps) )
 
 ###########################
 
+@np_check
 def pargsort(arr, n):
     idxs = np.argpartition(arr, n)[:n]
     return idxs[np.argsort(arr[idxs])][:n]
 
+@np_check
 def psort(arr, n):
     return arr[pargsort(arr, n)]
 
 ###########################
 
+@np_check
 def rchoice(*args, **kwargs):
     try:
         return np.random.choice(*args, **kwargs)
     except ValueError:
-        size = kwargs.get('size') or args[1] or 1
+        size = kwargs.get('size')
+        if not size:
+            if len(args) > 1:
+                size = args[1]
+            else:
+                size = 1
         if size < 2:
             return None
         else:
             return np.array([], dtype = object)
 
-###########################
-### SCIPY
+########################################################################
+########################################################################
+### SCIPY:
 
+@sci_check
 def lower_conf_bound(ups, downs, conf = 0.683):
     return beta.ppf((1.-conf)/2., 1+ups, 1+downs)
 
+@sci_check
 def upper_conf_bound(ups, downs, conf = 0.683):
     return beta.ppf(1.-(1.-conf)/2., 1+ups, 1+downs)
 
+@sci_check
 def conf_bounds(ups, downs, conf = 0.683):
     return (lower_conf_bound(ups, downs, conf), upper_conf_bound(ups, downs, conf))
 
 ########################################################################
+########################################################################
 ### PANDAS:
 
+@pd_check
 def rename_dup_df_cols(df, sep = '.'):
     names = pd.Series(df.columns)
     for dup in df.columns.get_duplicates():
@@ -274,8 +354,10 @@ def rename_dup_df_cols(df, sep = '.'):
     df.columns = names
 
 ########################################################################
+########################################################################
 ### MATPLOTLIB:
 
+@mpl_check
 def make_heatmap(
             data,
             xlabels  = None,

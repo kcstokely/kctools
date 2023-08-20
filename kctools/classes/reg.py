@@ -8,27 +8,24 @@ from collections import defaultdict
 class Register():
     
     '''
-        A Register() is a class with a register:
+        A Register() is a class with an internal register:
 
-          ._reg = {event: [obj1, obj2, obj3, ... ], ... }
+          ._reg = {event: {obj1, obj2, obj3, ... }, ... }
 
-          of objects which trigger on an event.
+          of objects which 'trigger' on occurance of an event.
 
-          Basically, you are a Register if you may
-            generate events that other objects need
+          Basically, you need a Register if you may
+            generate 'events' that other objects need
             to know about.
+    
+          These objects register with you, and if you ever
+            generate the triggerable event, then you call
+            their .trigger() method (with the event and
+            yourself as arguments).
             
-          These objects register with you, then you call
-            their .trigger() method if you ever generate
-            the triggerable event.
-            
-          They can also deregister from you when needed.
-
-          The registered objects should have method:
-            .trigger(event, registrar)
-
-          If it does not call .register() with events,
-            it can also have method: .trigger_events()
+          These objects can also deregister from you when needed.
+          
+          Call the self.check() method on any generated events.
     '''
 
     def __init__(self):
@@ -40,7 +37,7 @@ class Register():
 
         if events is None:
             try:
-                events = obj.trigger_events()
+                events = obj.events()
             except AttributeError:
                 pass
         
@@ -51,10 +48,11 @@ class Register():
             self._reg[event].add(obj)
 
     ###
-                
+
     def deregister(self, obj, events = None):
         
-        events = events if events is not None else list(self._reg.keys())
+        if events is not None:
+            events = list(self._reg.keys())
         
         if not isinstance(events, list):
             events = [ events ]
@@ -68,27 +66,42 @@ class Register():
     ###
                                                         
     def check(self, events):
-                                                        
+    
         if not isinstance(events, list):
             events = [ events ]
                
         for event in events:
             for obj in self._reg[event]:
-                obj.trigger(event, self)
-
+                try:
+                    obj.trigger(event, self)
+                except AttributeError:
+                    pass   
+                
 ################################################
 
 def Triggerable(ABC):
 
     '''
         You are triggerable if events affect you.
+        
+        Register yourself with an event-generating Register(),
+          with a list of events you are interested in. If ever
+          the Register() generates a corresponding event, your
+          .trigger() method is called.
+          
+        If you do not call Register.register() with an explicit
+          a list of events, you can have .events() method which
+          returns the list of events.
+          
+        Otherwise, registering will have no effect.
     '''
 
     @abstractmethod
     def trigger(self, event, registrar):
         pass
-    
-    def trigger_events(self):
+
+    @abstractmethod
+    def events(self):
         return []
 
 ################################################

@@ -6,19 +6,13 @@ with open('README.md', 'r') as fp:
 
 setuptools.setup(
     name             = 'kctools',
-    version          = '0.2.3',
+    version          = '23.8.0',
     author           = 'kevin c. stokely',
     author_email     = 'kcstokely@gmail.com',
     description      = 'miscellaneous elves',
     url              = 'https://github.com/kcstokely/kctools',
     packages         = setuptools.find_packages(),
-    install_requires = [
-        'matplotlib',
-        'numpy',
-        'pandas',
-        'scipy'
-    ],
-    license = 'MIT',
+    license          = 'MIT',
     classifiers = [
          'Operating System :: OS Independent',
          'Programming Language :: Python :: 3',
