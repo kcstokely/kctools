@@ -31,13 +31,12 @@ class Vector(dict):
             raise Exception(f'{attr} cannot be accessed as a class attribute.')
         else:
             return self[attr]
-        pass
     
     def __setattr__(self, attr, value):
         if attr in self._R_ATTRS or attr[0] == '_':
             raise Exception(f'{attr} cannot be set as a class attribute.')
         else:
-            return self[attr] = value
+            self[attr] = value
     
     def keys(self):
         return ( x for x in self._map.keys() )
