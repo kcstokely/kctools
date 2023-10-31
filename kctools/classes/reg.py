@@ -1,10 +1,8 @@
-################################################
-
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
-################################################
 
+################################
 class Register():
     
     '''
@@ -77,8 +75,8 @@ class Register():
                 except AttributeError:
                     pass   
                 
-################################################
 
+################################                
 def Triggerable(ABC):
 
     '''
@@ -103,9 +101,3 @@ def Triggerable(ABC):
     @abstractmethod
     def events(self):
         return []
-
-################################################
-
-
-
-

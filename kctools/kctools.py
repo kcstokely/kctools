@@ -7,7 +7,6 @@ from copy        import deepcopy
 from collections import defaultdict
 from importlib   import util
 
-
 is_np  = util.find_spec('numpy') is not None
 is_pd  = util.find_spec('pandas') is not None
 is_sci = util.find_spec('scipy') is not None
@@ -15,13 +14,10 @@ is_mpl = util.find_spec('matplotlib') is not None
 
 if is_np:
     import numpy  as np
-
 if is_pd:    
     import pandas as pd
-    
 if is_sci:    
     from scipy.stats import beta
-      
 if is_mpl:
     from matplotlib import pyplot as plt
 
@@ -60,6 +56,7 @@ def mpl_check(method):
         else:
             raise Exception('Please install matplotlib.')
     return wrapped
+
 
 ########################################################################
 ########################################################################
@@ -380,8 +377,8 @@ def make_heatmap(
 
     if norm:
         copy = data.copy()
-        for i in range(num):
-            for j in range(num):
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
                 data[i, j] = data[i, j] / np.min([copy[i, i], copy[j, j]])
         if norm == 'pct':
             data = (data * 100).astype(int)
@@ -419,12 +416,15 @@ def make_heatmap(
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
   
     if annotate:
-        for idx in range(len(data[0])):
-            for jdx in range(len(data[1])):
+        raise NotImplementedError
+        # bugged for non-square?
+        for idx in range(data.shape[0]):
+            for jdx in range(data.shape[1]):
                 value = f'{data[idx, jdx]:{fmt}}'
                 if value[0] == '0':
                     value = value[1:]
-            ax.text(jdx, idx, value, ha='center', va='center', color='w')
+            # flipped this
+            ax.text(idx, jdx, value, ha='center', va='center', color='w')
  
     if tight:
         fig.tight_layout()
@@ -437,22 +437,3 @@ def make_heatmap(
     return fig, ax
 
 ########################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

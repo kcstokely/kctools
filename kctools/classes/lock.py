@@ -1,10 +1,8 @@
-################################################
-
 class Lock():
 
     '''
-        Many classes are developed with methods which
-          change state then return the altered class.
+        Many classes contain methods which change the
+          current state then return the altered class.
 
         Sometimes, one may wish to call class methods
           without changing state, in order to use the 
@@ -20,7 +18,7 @@ class Lock():
         It is not useful on its own in any way, only
           as something to inherit from.
     '''
-    
+
     def copy(self):
         new = type(self)()
         new.__dict__.update(self.__dict__)
@@ -41,5 +39,3 @@ class Lock():
             else:
                 return method(self, *args, **kwargs)
         return wrapped
-    
-################################################

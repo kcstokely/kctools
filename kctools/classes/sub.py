@@ -1,5 +1,3 @@
-################################################
-
 from collections import Counter
 
 from ..kctools import endify as _e
@@ -10,11 +8,10 @@ from .data.config import conf as cf
 
 if is_np:
     import numpy as np
-    
+
 if is_np and is_pd:
     import pandas as pd
 
-################################################
 
 class N():
     
@@ -32,7 +29,7 @@ class N():
         All data:
           - kept in self._hot
           - it is an np.ndarray
-          - it will either be 1-D or 2-D
+          - it will be either 1-D or 2-D
           - if 1-D it is a 1-hot vector
           - if 2-D it is N 1-hot vectors,
           -   unique and sorted.
@@ -108,7 +105,7 @@ class N():
                 self._hot = self._hot.reshape((self._hot.shape[0]//N._L, N._L))
                 return self.crush()
         return wrapped
-    
+
     def tuple_mapper(method):
         # extends bool/int/tuple methods to act on 2-D arrays
         def wrapped(self, *args, **kwargs):
@@ -430,7 +427,7 @@ class N():
         '''
         
         if isinstance(filt, str):
-            assert filt in ['hot', 'canon', 'ext_canon']   
+            assert filt in ['', 'hot', 'canon', 'ext_canon']   
             
         cols  = ['hot', 'num', 'energy', 'symmetry']
         cols += ['ext_canonical', 'runs', 'gaps']
@@ -487,7 +484,3 @@ class N():
             )
 
         return df
-
-################################################
-
-

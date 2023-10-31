@@ -38,8 +38,8 @@ from .kctools import conf_bounds
 from .kctools import rename_dup_df_cols
 from .kctools import make_heatmap
 
-from .classes.dicts import adict, odict
 from .classes.cuke  import Cuke
+from .classes.dict  import addict
 from .classes.lock  import Lock
 from .classes.map   import Map
 from .classes.sub   import N

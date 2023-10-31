@@ -1,24 +1,18 @@
-################################################
-
 from .map import Map
+from ..kctools import coalesce
 
-################################################
-
+################################
 class Vector(dict):
-    
-    '''
-        A Vector is an ordered dict (it keeps track of its keys in a Map).
 
-        It can also zero itself, or set, add, or multiply with other dicts.
+    '''
+        A Vector is a dictionary that is ordered, by 
+          keeping track of its keys in a Map.
+
+        It can also zero itself; or set, add, or multiply
+          with other dictionaries (or Vectors).
     '''
 
-    _RESTRICTED_ATTRS = [
-        'keys', 'values', 'items', 'snap', 'recall',
-        'nullify', 'set', 'add', 'mul', 'apply'
-    ]
-    
     def __init__(self, inp = {}):
-        self._R_ATTRS = Vector._RESTRICTED_ATTRS_
         self._map = Map()
         self.set(inp, True)
         self.snap()
@@ -27,16 +21,19 @@ class Vector(dict):
         return str(list(self.items()))
     
     def __getattr__(self, attr):
-        if attr in self._R_ATTRS or attr[0] == '_':
-            raise Exception(f'{attr} cannot be accessed as a class attribute.')
-        else:
+        try:
+            return object.__getattribute__(self, attr)
+        except AttributeError:
             return self[attr]
     
     def __setattr__(self, attr, value):
-        if attr in self._R_ATTRS or attr[0] == '_':
-            raise Exception(f'{attr} cannot be set as a class attribute.')
-        else:
+        try:
+            object.__getattribute__(self, attr)
+            raise Exception(f'"{attr}" is protected, hence cannot be set as a class attribute; use ["{attr}"] instead.')
+        except AttributeError:
             self[attr] = value
+    
+    ###
     
     def keys(self):
         return ( x for x in self._map.keys() )
@@ -46,6 +43,11 @@ class Vector(dict):
     
     def items(self):
         return ( (x, self[x]) for x in self._map.keys() )
+    
+    ###
+    
+    def copy(self):
+        return Vector(self.items())
     
     def snap(self):
         self._snap = self.values()
@@ -57,7 +59,7 @@ class Vector(dict):
     
     def nullify(self):
         '''
-            set all attributes to 'zero', by:
+            set all attributes to zero
             self.attr = 0
         '''
         for attr, value in self.items():
@@ -65,13 +67,25 @@ class Vector(dict):
         return self
     
     ###
+    
+    def scale(self, factor):
+        '''
+            mulltiply all numeric values by a constant factor
+            self.attr = f * self.attr
+        '''
+        for attr, value in self._map.items():
+            if type(value) in [int, float, complex]:
+                self[attr] = type(attr)(factor * value)
+        return self
+    
+    ###
 
-    def set(self, inp, add_new = False):
+    def set(self, other, add_new = False):
         '''
-            set all attributes (found in 'inp'), by:
-            self.attr = inp.attr
+            overwrite all attributes (found in 'other')
+            self.attr = other.attr
         '''
-        for attr, value in inp.items():
+        for attr, value in other.items():
             if attr in self._map or add_new:
                 self._map.add(attr)
                 self[attr] = value
@@ -79,55 +93,57 @@ class Vector(dict):
     
     ###
     
-    def add(self, inp, add_new = False):
-        assert type(inp) in [dict, Vector]
+    def add(self, other, add_new = False):
         '''
-            set all attributes (found in 'inp'), by:
-            self.attr = self.attr + inp.attr
+            add all attributes (found in 'other')
+            self.attr = self.attr + other.attr
         '''
-        for attr, value in inp.items():
+        for attr, value in other.items():
             if attr in self._map:
-                if type(value) in [set, dict]:
-                    value.update(inp)
+                if type(self[attr]) in [set, dict]:
+                    self[attr].update(value)
                 else:
                     self[attr] = self[attr] + value
             elif add_new:
-                self._map.add(attr)
-                self[attr] = type(value)() + value
+                    self[attr] = value
         return self
     
     ###
     
-    def mul(self, inp, add_new = False):
+    def mul(self, other, add_new = False):
         '''
-            set all attributes (found in 'inp'), by:
-            self.attr = self.attr * inp.attr
+            multiply all numeric attributes (found in 'other')
+            self.attr = self.attr * other.attr
         '''
-        for attr, value in inp.items():
-            # numeric only
+        for attr, value in other.items():
             if type(value) in [int, float, complex]:
                 if attr in self._map:
                     self[attr] = self[attr] * value
                 elif add_new:
-                    self[attr] = type(value)() * value
+                    self[attr] = type(value)()
         return self
-
+    
     ###
     
-    def apply(self, inp, func, add_new = False):
+    def apply(self, other, func, add_new = False):
         '''
-            set all attributes (found in 'inp'), by:
-            self.attr = func(self.attr, inp.attr)
+            set all attributes (found in 'other')
+            self.attr = func(self.attr, other.attr)
         '''
-        for attr, value in inp.items():
+        for attr, value in other.items():
             if attr in self._map:
                 self[attr] = func(self[attr], value)
             elif add_new:
                 self[attr] = func(type(value)(), value)
         return self
-    
-################################################
 
+    ###
+    
+    def coalesce(self, other, add_new = False):
+        return self.apply(other, coalesce, add_new)
+    
+
+################################
 class VecSet(Vector):
     
     '''
@@ -136,14 +152,9 @@ class VecSet(Vector):
           which may be loaded or unloaded with
           a named key.
     '''
-
-    _RESTRICTED_ATTRS = [
-        'load', 'unload'
-    ]
     
     def __init__(self):
         Vector.__init__(self)
-        self._R_ATTRS += VecSet._RESTRICTED_ATTRS_
         self._slots = {}
 
     ###
@@ -156,9 +167,8 @@ class VecSet(Vector):
     ###
 
     def load(self, key, value):
-        assert type(value) in [dict, Vector]
-        if isinstance(value, dict):
-            value = Vector(value)
+        assert isinstance(value, dict)
+        value = Vector(value)
         self._slots.update({key: value})
         self._reset()
 
@@ -168,11 +178,4 @@ class VecSet(Vector):
         if key in self._slots:
             del self._slots[key]
             self._reset()
-
-################################################
-    
-    
-    
-    
-
 

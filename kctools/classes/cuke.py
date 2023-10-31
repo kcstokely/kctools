@@ -1,25 +1,22 @@
-################################################
-
 import hashlib, os, pickle
 
 class Cuke():
     
     '''
         This is a class that can preserve itself
-          to disk, and load itself back as well.
+          to disk, and read itself back as well.
     '''
     
     def __init__(self,
         name,
-        abs_dir = None,         
-        rel_dir = 'cukes',
+        abs_dir = '',         
+        rel_dir = '',
         ext     = 'pkl',
         xhash   = False
     ):
-        
-        assert name
         self.name = str(name)
-        cuke_dir = abs_dir or os.path.join(os.getcwd(), rel_dir)
+        assert self.name
+        cuke_dir = os.path.join(abs_dir, rel_dir)
         os.makedirs(cuke_dir, exist_ok = True)
         token = name if not xhash else hashlib.md5(name.encode('utf-8')).hexdigest()
         self._path = os.path.join(cuke_dir, f'{token}.{ext}')
@@ -34,11 +31,3 @@ class Cuke():
     def write(self):
         with open(self._path, 'wb') as fp:
             pickle.dump(self.__dict__.copy(), fp)
-
-################################################
-
-
-
-
-
-

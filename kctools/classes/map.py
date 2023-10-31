@@ -1,5 +1,3 @@
-################################################
-
 class Map():
 
     '''
@@ -30,9 +28,7 @@ class Map():
           are then removed from the Map, with integers collapsing downward
           as appropriate to keep them sequential.
     '''
-    
-    ###############
-    
+
     def __init__(self, inp = [], offset = 0):
         assert isinstance(offset, int), 'Offset is not an integer.'
         assert not (offset < 0), 'Offset is not non-negative.'
@@ -64,7 +60,7 @@ class Map():
         for x in self.keys():
             yield x
     
-    ###############
+    ############
 
     def keys(self):
         return ( self._inv[i] for i in self.values() ) 
@@ -75,7 +71,7 @@ class Map():
     def items(self):
         return zip(self.keys(), self.values())
     
-    ###############
+    ############
     
     def _add_item(self, key):
         assert not isinstance(key, int)
@@ -96,7 +92,7 @@ class Map():
         elif key in self._map:
             self._rem_item(self._map[key])
 
-    ###############
+    ############
 
     def get(self, thing):
         if type(thing) in (list, tuple):
@@ -120,18 +116,3 @@ class Map():
         else:
             self._rem_item(thing)
         return thing_two
-
-################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
