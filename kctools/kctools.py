@@ -96,7 +96,7 @@ def html_strip(text):
 ###########################
 
 def rem_punc(text):
-    return ''.join([ y if not y in string.punctuation else '' for y in list(text) ])
+    return ''.join([ y if not y in string.punctuation else '' for y in list(text) ]) # list is superfluous?
 
 def rep_punc(text):
     return ''.join([ y if not y in string.punctuation else ' ' for y in list(text) ])
@@ -119,6 +119,7 @@ def endify(n):
 ###########################
 
 def humanify(n, l = 2, space = False):
+    # what if pass in a string?
     m = math.abs(n)
     e = int(math.log10(m))
     d = min((e//3)*3, 12)
@@ -211,6 +212,8 @@ def dict_update(A, B, inplace = False):
 ########################################################################
 ########################################################################
 ### LOGGING:
+
+# add color formatting?
 
 def setup_logger(
         name,
@@ -389,14 +392,14 @@ def make_heatmap(
         data = data.astype(int)
 
     if not xlabels:
-        xlabels = [ str(i) for i in range(len(data[0]))]
+        xlabels = [ str(i) for i in range(len(data[0])) ]
     if not ylabels:
-        ylabels = [ str(i) for i in range(len(data[1]))]
+        ylabels = [ str(i) for i in range(len(data[1])) ]
 
     #########
 
     fig, ax = plt.subplots(figsize=figsize)
-    img = ax.imshow(data, cmap = 'copper', origin='lower', interpolation='nearest')
+    img = ax.imshow(data, cmap = cmap, origin='lower', interpolation='nearest')
   
     if title:
         fig.suptitle(title, fontsize=12)
@@ -416,15 +419,12 @@ def make_heatmap(
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
   
     if annotate:
-        raise NotImplementedError
-        # bugged for non-square?
         for idx in range(data.shape[0]):
             for jdx in range(data.shape[1]):
                 value = f'{data[idx, jdx]:{fmt}}'
                 if value[0] == '0':
                     value = value[1:]
-            # flipped this
-            ax.text(idx, jdx, value, ha='center', va='center', color='w')
+                ax.text(jdx, idx, value, ha='center', va='center', color='w')
  
     if tight:
         fig.tight_layout()
