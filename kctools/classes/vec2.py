@@ -54,80 +54,60 @@ class Vector(AttrSpace):
         return Vector(self.items())
     
     def recall(self):
-        return self._snap
+        return Vector(self._snap)
     
     def snapshot(self):
-        self._snap = self.values()
+        self._snap = self.items()
         return self
 
     ###
     
     def nullify(self):
-        '''
-            set all attributes to zero
-            self.attr = 0
-        '''
         for attr, value in self.items():
             self[attr] = type(value)()
         return self
     
     ###
     
-    def scale(self, factor):
-        '''
-            mulltiply all numeric values by a constant factor
-            self.attr = f * self.attr
-        '''
-        for attr, value in self._map.items():
-            if type(value) in [int, float, complex]:
-                self[attr] = type(attr)(factor * value)
-        return self
-    
-    ###
+    def __mul__(self, other):
 
-    def set(self, other, add_new = False):
-        '''
-            overwrite all attributes (found in 'other')
-            self.attr = other.attr
-        '''
-        for attr, value in other.items():
-            if attr in self._map or add_new:
-                self._map.add(attr)
-                self[attr] = value
-        return self
+        this = self.copy()      
+        types = (None, bool, int, float, complex)
+        
+        if type(other) in types:
+            
+            for attr, value in this._map.items():
+                if type(value) in types:
+                    this[attr] = type(attr)(factor * value) # work with non, bool, etc?
+        
+        elif isinstance(other, dict):
+            
+            for attr, value in other.items():
+                if type(value) in types:
+                    if attr in self._map:
+                        this[attr] = this[attr] * type(this[attr])(value)
+            
+        return this
     
     ###
     
-    def add(self, other, add_new = False):
-        '''
-            add all attributes (found in 'other')
-            self.attr = self.attr + other.attr
-        '''
+    def __add__(self, other, add_new = False):
+
+        this = self.copy()  
+        
         for attr, value in other.items():
-            if attr in self._map:
-                if type(self[attr]) in [set, dict]:
-                    self[attr].update(value)
+            
+            if attr in this._map:
+                if type(this[attr]) in [set, dict]:
+                    this[attr].update(value)
                 else:
-                    self[attr] = self[attr] + value
-            elif add_new:
-                    self[attr] = value
+                    this[attr] = this[attr] + value
+            else:
+                this._map.add(attr)
+                this[attr] = value
+                
         return self
-    
-    ###
-    
-    def mul(self, other, add_new = False):
-        '''
-            multiply all numeric attributes (found in 'other')
-            self.attr = self.attr * other.attr
-        '''
-        for attr, value in other.items():
-            if type(value) in [int, float, complex]:
-                if attr in self._map:
-                    self[attr] = self[attr] * value
-                elif add_new:
-                    self[attr] = type(value)()
-        return self
-    
+
     ###
     
     def apply(self, other, func, add_new = False):

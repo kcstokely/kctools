@@ -21,8 +21,9 @@ class Map():
           expected list of mapped values, and 'None' for missing
           elements.
 
-        Map.add(x) is equivalent to Map.get(x), except missing elements
-          will automatically be added, and the new mapped value returned.
+        Map.add(x) is equivalent to Map.get(x), except missing
+          elements will automatically be added (depth first),
+          and the new mapped value returned.
 
         Map.rem(x) is equivalent to Map.get(x), except any found elements
           are then removed from the Map, with integers collapsing downward

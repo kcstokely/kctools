@@ -1,16 +1,18 @@
 from collections import Counter
 
 from ..kctools import endify as _e
-from ..kctools import is_np, is_pd
-from ..kctools import pd_check
+from ..kctools import is_np, is_pd, is_tq
+from ..kctools import pd_check, npd_check
 
-from .data.config import conf as cf
+from .data.names import names as cf
 
 if is_np:
     import numpy as np
 
 if is_np and is_pd:
     import pandas as pd
+    if is_tq:
+        from tqdm import tqdm
 
 
 class N():
@@ -24,20 +26,20 @@ class N():
           of collections of notes from 
           an L-tone musical scale.
           
-        So generally, L will be twelve.
+        So, generally, L will be twelve.
 
         All data:
-          - kept in self._hot
-          - it is an np.ndarray
+          - is stored in self._hot
+          - as an np.ndarray
           - it will be either 1-D or 2-D
           - if 1-D it is a 1-hot vector
           - if 2-D it is N 1-hot vectors,
-          -   unique and sorted.
+              unique and sorted.
 
         All methods:
-          - rely only on self._hot
+          - depend only on self._hot
           - written to act on 1-D array
-          - wrappers extend to act on 2-D
+          - wrapped to act on 2-D arrays
     '''
 
     ### CONFIG   
@@ -48,28 +50,36 @@ class N():
     
     ############ BIRTH
     
-    def __init__(self, inp = []):
+    @npd_check
+    def __init__(self, *inp):
 
-        if not is_np:
-            raise Exception('Please install numpy, and maybe pandas.')
-        
-        if isinstance(inp, N):
-            self._hot = inp._hot
+        if len(inp) == 1:
+            inp = inp[0]
         else:
-            
+            assert all([ (type(x) in (bool, int)) for x in inp ])
+
+        if isinstance(inp, N):
+            self._hot = inp._hot.copy()
+        else:
             if isinstance(inp, str):
                 ndxs = N._conf[inp]
             elif isinstance(inp, int):
-                ndxs = np.where([ int(x) for x in list(f'{int(bin(inp)[2:]):0{N._L}d}') ])[0]
-            elif len(inp) == N._L:
-                ndxs = np.where(inp)[0]
+                ndxs = np.where([ int(x) for x in list(f'{int(bin(inp)[2:]):0{N._L}d}') ][-N._L:])[0]
+            elif type(inp) in (tuple, list, np.ndarray):
+                if len(inp) == N._L:
+                    ndxs = np.where(inp)[0]
+                else:
+                    ndxs = inp
             else:
-                ndxs = inp
+                ndxs = []
 
             self._hot = np.zeros(N._L, dtype=bool)
             self._hot[[ ndx%N._L for ndx in ndxs ]] = 1
     
-    ############ WHAT
+    ############ ETC
+
+    def __bool__(self):
+        return bool(self._hot.sum())
     
     def __len__(self):
         return self._hot.shape[0] if self._hot.ndim > 1 else 1
@@ -90,7 +100,7 @@ class N():
             if self._hot.shape[0] == 1:
                 self._hot = self._hot[0]
             else:
-                keys = np.apply_along_axis(lambda x: N(x).index(), 1, self._hot)
+                keys = np.apply_along_axis(lambda x: N(x).idx(), 1, self._hot)
                 self._hot = self._hot[np.argsort(keys)]
         return self
 
@@ -107,7 +117,7 @@ class N():
         return wrapped
 
     def tuple_mapper(method):
-        # extends bool/int/tuple methods to act on 2-D arrays
+        # extends bool/int/str/tuple methods to act on 2-D arrays
         def wrapped(self, *args, **kwargs):
             if self._hot.ndim == 1:
                 return method(self, *args, **kwargs)
@@ -122,35 +132,35 @@ class N():
         return tuple(int(x) for x in self._hot)
 
     @tuple_mapper
-    def index(self):
-        return int(''.join(map(str, N(self).compose().hot())), 2)
+    def idx(self):
+        return int(''.join(map(str, N(self).compose().hot()))[::-1], 2)
     
     @tuple_mapper
     def notes(self):
         return tuple(np.where(self._hot)[0])
 
     @tuple_mapper
-    def string(self):
-        return ''.join([ 'x' if x else '_' for x in self.hot() ])
-    
+    def diff(self):
+        return tuple(np.diff(list(self.notes())+[N._L+self.notes()[0]])) if self.notes() else ()
+        
     @tuple_mapper
     def forte(self):
         x = self.num()
-        y = 1 + N(self).modes()._hot.tolist().index(N(self).canonical())
+        y = 1 + N(self).modes()._hot.tolist().index(N(self).canon())
         return (x, y)
     
     @tuple_mapper
     def forte_string(self):
         x = self.num()
-        y = 1 + N(self).modes()._hot.tolist().index(N(self).canonical())
+        y = 1 + N(self).modes()._hot.tolist().index(N(self).canon())
         return '-'.join(self.forte())
     
     @tuple_mapper
-    def diff(self):
-        return tuple(np.diff(list(self.notes())+[N._L+self.notes()[0]])) if self.notes() else ()
+    def string(self):
+        return ''.join([ 'x' if x else '-' for x in self.hot() ])
     
     @tuple_mapper
-    def lookup(self):
+    def name(self):
         name = N._cmap.get(self.notes(), '')
         if not name:
             modes = N(self).modes()
@@ -159,13 +169,14 @@ class N():
                 name = N._cmap.get(mode.notes())
                 if name:
                     if not self._hot[0]:
-                        name = f'disp. mode of {name}'
+                        name = f'(shifted) {name}'
                     else:
                         for mdx in range(self.num()):
                             if (self._hot == N(mode).roll(mdx)._hot).all():
-                                name = f'{_e(mdx+1)} mode of {name}'
+                                name = f'({_e(mdx+1)} mode) {name}'
                                 break
                     break
+        name = name or self.string()
         return name
     
     @tuple_mapper
@@ -174,7 +185,7 @@ class N():
         return tuple(zip(self.notes(), chords))
     
     ############ CALCULATE (NON-UNIQUE VALUES)
-    
+
     @tuple_mapper
     def num(self):
         return self._hot.sum()
@@ -195,21 +206,25 @@ class N():
 
     @tuple_mapper
     def handedness(self):
-        if (N(self).canonical()._hot == N(self).rev().canonical()._hot).all():
+        if (N(self).canon()._hot == N(self).rev().canon()._hot).all():
             h = 0
-        elif (N(self).canonical()._hot == N(self).ext_canonical()._hot).all():
+        elif (N(self).canon()._hot == N(self).ext_canon()._hot).all():
             h = -1
         else:
             h = 1
         return h
 
     @tuple_mapper
+    def is_root(self):
+        return self._hot[0] == 1
+    
+    @tuple_mapper
     def is_canon(self):
-        return (self._hot == N(self).canonical()._hot).all()
+        return (self._hot == N(self).canon()._hot).all()
     
     @tuple_mapper
     def is_ext_canon(self):
-        return (self._hot == N(self).ext_canonical()._hot).all()
+        return (self._hot == N(self).ext_canon()._hot).all()
     
     @tuple_mapper
     def energy(self, norm = False, ref = False):
@@ -255,9 +270,9 @@ class N():
 
     @tuple_mapper
     def contained(self, other):
-        return other.contains(self)
-
-    ############ MUTATE  (PRESERVE)    
+        return N(other).contains(self)
+    
+    ############ MUTATE (PRESERVE)    
     
     @array_mapper
     def compose(self):
@@ -268,10 +283,10 @@ class N():
     def decompose(self):
         self.compose()
         self._hot = self._hot.astype(int)
-        self._hot += N(self).compliment()._hot
+        self._hot += N(self).complement()._hot
         return self  
     
-    ############ MUTATE  (PRESERVE / ONE-TO-ONE)
+    ############ MUTATE (PRESERVE / ONE-TO-ONE)
     
     @array_mapper
     def inv(self):
@@ -285,16 +300,13 @@ class N():
         return self
     
     @array_mapper
+    def reflect(self):
+        self._hot = np.roll(np.flip(self._hot), 1)
+    
+    @array_mapper
     def trans(self, ndx = 0):
         ndx = ndx % N._L
         self._hot = np.roll(self._hot, -ndx)
-        return self
-    
-    @array_mapper
-    def roll(self, mdx = 0):
-        if self.num():
-            mdx = mdx % self.num()
-            self.trans(self.notes()[mdx])
         return self
     
     @array_mapper
@@ -326,7 +338,18 @@ class N():
     ############ MUTATE (PRESERVE / MANY-TO-ONE)
     
     @array_mapper
-    def canonical(self):
+    def roll(self, mdx = 0):
+        if self.num():
+            mdx = mdx % self.num()
+            self.trans(self.notes()[mdx])
+        return self
+    
+    @array_mapper
+    def root(self):
+        return self.roll()
+
+    @array_mapper
+    def canon(self):
         self.compose().modes()
         if self._hot.ndim > 1:
             self._hot = self._hot[-1, :]
@@ -334,7 +357,7 @@ class N():
         return self
 
     @array_mapper
-    def ext_canonical(self):
+    def ext_canon(self):
         self.compose().ext_modes()
         if self._hot.ndim > 1:
             self._hot = self._hot[-1, :]
@@ -345,15 +368,15 @@ class N():
     
     @array_mapper
     def chord(self, n_max = None):
-        n_max = n_max if n_max else N._L
+        n_max = n_max or N._L
         n_max = max(n_max, self.num()//2 + self.num()%2)
         notes = self.notes()[::2][:n_max]
         self._hot = N(notes)._hot
         return self
 
     @array_mapper
-    def compliment(self, n_max = None):
-        n_max = n_max if n_max else N._L
+    def complement(self, n_max = None):
+        n_max = n_max or N._L
         chord = N(self).chord().notes()
         notes = [ n for n in self.notes() if n not in chord ][:n_max]
         self._hot = N(notes)._hot
@@ -400,7 +423,7 @@ class N():
             for i, j in ndxs:
                 self._hot[i, j] = 0
         return self.crush()
-    
+
     @array_mapper
     def universe(self):
         self._hot = np.zeros((2**N._L, N._L), dtype=bool)
@@ -408,79 +431,90 @@ class N():
             self._hot[idx, :] = N(idx)._hot
         return self
 
-    def uv(self):
-        return self.universe()
+    def uv(self, filt = None):
+        return self.universe().filt(filt)
+
+    ### MUTATE (BLACK HOLE)
+    
+    def _filter(self, filt):
+        assert self._hot.ndim == 1
+        success = True
+        if filt:
+            success *= self.is_root()
+            if not filt == 'root':
+                success *= (self.num() >= 2)
+                success *= (self.num() <= 8)
+                run_lim = {2:1, 3:2, 4:2, 5:2}.get(self.num(), 3)
+                run_max = self.runs()[0][0] if self.runs() else 0
+                success *= run_max <= run_lim
+                gap_lim = {2:7, 3:6, 4:5}.get(self.num(), 3)
+                gap_max = self.gaps()[0][0] if self.gaps() else N._L
+                success *= gap_max <= gap_lim
+            if filt == 'canon':
+                success *= self.is_canon()
+            if filt == 'ext_canon':
+                success *= self.is_ext_canon()
+        return success
+
+    def filt(self, filt = True):
+        assert filt in [None, False, 0, 'root', True, 1, 'canon', 'ext_canon']
+        if filt:
+            if self._hot.ndim == 2:
+                succ = [ N(x)._filter(filt) for x in self._hot ]
+                keep = np.where(succ)[0]
+                self._hot = self._hot[keep, :]
+                if not len(self._hot):
+                    self._hot = np.zeros(N._L, dtype=bool)
+            else:
+                assert self._hot.ndim == 1
+                if not self._filter(filt):
+                    self._hot = np.zeros(N._L, dtype=bool)
+        return self
     
     ### WE LOVE TO SPREADSHEET
     
-    @pd_check
     def df(self, filt = None):
         return self.dataframe(filt)
-    
+
     @pd_check
     def dataframe(self, filt = None):
 
-        '''
-            Creates a panda of all 2**L sequences, or
-              optionally filtered down to a musically
-              relevant subset.
-        '''
+        # big bang
+        if not self.num():
+            self.universe()
         
-        if isinstance(filt, str):
-            assert filt in ['', 'hot', 'canon', 'ext_canon']   
+        self.filt(filt) 
             
         cols  = ['hot', 'num', 'energy', 'symmetry']
-        cols += ['ext_canonical', 'runs', 'gaps']
-        cols += ['canonical', 'handedness', 'string', 'lookup']
+        cols += ['ext_canon', 'runs', 'gaps']
+        cols += ['canon', 'handedness']
+        cols += ['string', 'name']
 
+        what = tqdm(self) if is_tq and len(self) >= 512 else self
+        
         rows = []
-        for hot in self:
+        for hot in what:
             row = []
             for col in cols:
-                value = getattr(hot, col)()
-                value = value.hot() if isinstance(value, N) else value
+                value = getattr(N(hot), col)()
+                value = value.hot() if isinstance(value, N) else value 
                 row.append(value)
             rows.append(row)
         df = pd.DataFrame(rows, columns=cols)
 
+        df = df.sort_values(
+            by = ['num', 'energy', 'symmetry', 'runs', 'gaps', 'handedness'],
+            ascending = [True, True, False, False, False, False]
+        )
+
         if filt:
-
-            # limit to first note present
-            df['ok'] = df['hot'].apply(lambda x: x[0])
-            df = df.drop(df[df['ok']==0].index).drop(['ok'], axis = 1)
-
-            # limit to num in [3, 8]
-            df = df.drop(df[df['num']<3].index)
-            df = df.drop(df[df['num']>8].index)
-
-            # limit to no 'large' runs
-            df['run_lim'] = df['num'].apply(lambda x: {3:2, 4:2, 5:2}.get(x, 3))
-            df['max_run'] = df['runs'].apply(lambda x: x[0][0] if x else 0)
-            df = df.drop(df[df['max_run']>df['run_lim']].index)
-            df = df.drop(['run_lim', 'max_run'], axis = 1)
-
-            # limit to no 'large' gaps
-            df['gap_lim'] = df['num'].apply(lambda x: {3:6, 4:5}.get(x, 3))
-            df['max_gap'] = df['gaps'].apply(lambda x: x[0][0] if x else N._L )
-            df = df.drop(df[df['max_gap']>df['gap_lim']].index)
-            df = df.drop(['gap_lim','max_gap'], axis = 1)
-
-            if filt == 'hot':
-                df = df.set_index('hot', drop=True)
-
-            if filt == 'canon':
-                df = df[df['canonical']==df['hot']]
-                df = df.drop(['hot', 'ext_canonical'], axis=1)
-                df = df.set_index('canonical', drop=True)
-
-            if filt == 'ext_canon':
-                df = df[df['ext_canonical']==df['hot']]
-                df = df.drop(['hot', 'canonical'], axis=1)
-                df = df.set_index('ext_canonical', drop=True)
-
-            df = df.sort_values(
-                by = ['num', 'energy', 'symmetry', 'runs', 'gaps', 'handedness'],
-                ascending = [True, True, False, False, False, False]
-            )
-
+            if filt in ['canon', 'ext_canon']:
+                index_col = filt 
+                df = df.drop('hot', axis=1)
+                if filt == 'ext_canon':
+                    df = df.drop('canon', axis=1)
+            else:
+                index_col = 'hot'
+            df = df.set_index(index_col, drop=True)
+                    
         return df

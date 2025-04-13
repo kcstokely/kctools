@@ -9,6 +9,7 @@ from importlib   import util
 
 is_np  = util.find_spec('numpy') is not None
 is_pd  = util.find_spec('pandas') is not None
+is_tq  = util.find_spec('tqdm') is not None
 is_sci = util.find_spec('scipy') is not None
 is_mpl = util.find_spec('matplotlib') is not None
 
@@ -21,7 +22,7 @@ if is_sci:
 if is_mpl:
     from matplotlib import pyplot as plt
 
-    
+
 def np_check(method):
     def wrapped(*args, **kwargs):
         if is_np:
@@ -39,6 +40,13 @@ def pd_check(method):
             raise Exception('Please install pandas.')
     return wrapped
 
+def npd_check(method):
+    def wrapped(*args, **kwargs):
+        if is_np:
+            return method(*args, **kwargs)
+        else:
+            Exception('Please install numpy, and maybe pandas.')
+    return wrapped
 
 def sci_check(method):
     def wrapped(*args, **kwargs):
@@ -96,10 +104,10 @@ def html_strip(text):
 ###########################
 
 def rem_punc(text):
-    return ''.join([ y if not y in string.punctuation else '' for y in list(text) ]) # list is superfluous?
+    return ''.join([ y if not y in string.punctuation else '' for y in text ])
 
 def rep_punc(text):
-    return ''.join([ y if not y in string.punctuation else ' ' for y in list(text) ])
+    return ''.join([ y if not y in string.punctuation else ' ' for y in text ])
 
 ###########################
 
@@ -119,7 +127,7 @@ def endify(n):
 ###########################
 
 def humanify(n, l = 2, space = False):
-    # what if pass in a string?
+    n = float(n)
     m = math.abs(n)
     e = int(math.log10(m))
     d = min((e//3)*3, 12)
@@ -199,6 +207,13 @@ def vivify(levels = 2, final = int):
 def mortify(inp):
     return { k: mortify(v) for k, v in inp.items() } if isinstance(inp, dict) else inp
 
+def invert(x):
+    y = defaultdict(list)
+    for k, vlist in x.items():
+        for v in vlist:
+            y[v].append(k)
+    return dict(y)
+
 def dict_update(A, B, inplace = False):
     if not inplace:
         A = deepcopy(A)
@@ -255,6 +270,14 @@ def setup_logger(
 
 def mround(x, m):
     return int(m * round(float(x)/m))
+
+def choose(x, y, other = None):
+    i = x > other if other is not None else True
+    j = y > other if other is not None else True
+    if i ^ j:
+        return x if i else y
+    else:
+        return x if y < x else y
 
 def coalesce(*values):
     y = 0

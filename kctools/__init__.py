@@ -19,9 +19,11 @@ from .kctools import where_in_thing
 from .kctools import autovivify
 from .kctools import vivify
 from .kctools import mortify
+from .kctools import invert
 from .kctools import dict_update
 from .kctools import setup_logger
 from .kctools import mround
+from .kctools import choose
 from .kctools import coalesce
 from .kctools import normalize
 from .kctools import is_diagonal
@@ -38,10 +40,12 @@ from .kctools import conf_bounds
 from .kctools import rename_dup_df_cols
 from .kctools import make_heatmap
 
-from .classes.cuke  import Cuke
-from .classes.dict  import addict
-from .classes.lock  import Lock
-from .classes.map   import Map
-from .classes.sub   import N
-from .classes.reg   import Register
-from .classes.vec   import Vector, VecSet
+from .classes.addict import addict
+from .classes.cache  import cached
+from .classes.cuke   import Cuke
+from .classes.lock   import Lock
+from .classes.map    import Map
+from .classes.reg    import Register
+from .classes.roll   import R 
+from .classes.sub    import N
+from .classes.vec    import Vector, VecSet
