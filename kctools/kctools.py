@@ -1,5 +1,3 @@
-########################################################################
-
 import datetime as dt
 import logging, math, os, re, string, sys
 
@@ -22,7 +20,6 @@ if is_sci:
 if is_mpl:
     from matplotlib import pyplot as plt
 
-
 def np_check(method):
     def wrapped(*args, **kwargs):
         if is_np:
@@ -30,7 +27,6 @@ def np_check(method):
         else:
             raise Exception('Please install numpy.')
     return wrapped
-
 
 def pd_check(method):
     def wrapped(*args, **kwargs):
@@ -45,7 +41,7 @@ def npd_check(method):
         if is_np:
             return method(*args, **kwargs)
         else:
-            Exception('Please install numpy, and maybe pandas.')
+            raise Exception('Please install numpy, and maybe pandas.')
     return wrapped
 
 def sci_check(method):
@@ -55,8 +51,7 @@ def sci_check(method):
         else:
             raise Exception('Please install scipy.')
     return wrapped
-
-                            
+     
 def mpl_check(method):
     def wrapped(*args, **kwargs):
         if is_mpl:
@@ -65,17 +60,16 @@ def mpl_check(method):
             raise Exception('Please install matplotlib.')
     return wrapped
 
-
 ########################################################################
 ########################################################################
 ### FILES:
 
-def lsdashr(tdir, absolute = False):
-    sdx = 0 if absolute else len(tdir)
-    return [ os.path.join(dp, f)[sdx:] for dp, dn, fn in os.walk(tdir) for f in fn ]
+def lsdashr(path, absolute = False):
+    sdx = 0 if absolute else len(path) + len(os.sep)
+    return [ os.path.join(dp, f)[sdx:] for dp, dn, fn in os.walk(path) for f in fn ]
 
-def readlines(fname, mode = 'r'):
-    with open(fname, mode) as fp:
+def readlines(path):
+    with open(path, 'r') as fp:
         return [ line.strip() for line in fp.readlines() ]
 
 ########################################################################
@@ -88,7 +82,7 @@ def lpad(text, x = 2):
 ###########################
 
 def sbool(text):
-    if isinstance(inp, str):
+    if isinstance(text, str):
         if text.lower() in ['false', 'no', 'f', 'n', '0']:
             return False
         if text.lower() in ['true', 'yes', 't', 'y', '1']:
@@ -119,16 +113,25 @@ def tnow():
 def endify(n):
     n = str(n)
     if n:
-        d = list(n)[-1]
+        neg = False
+        if n[0] == '-':
+            n = n[1:]
+            neg = True
+        if len(n) >= 2 and n[-2] == '1':
+            return n + 'th'
         c = {'1': 'st', '2': 'nd', '3': 'rd'}
-        n = n + c.get(d, 'th')
+        n = n + c.get(n[-1], 'th')
+        if neg:
+            n = '-' + n
     return n
     
 ###########################
 
 def humanify(n, l = 2, space = False):
     n = float(n)
-    m = math.abs(n)
+    m = abs(n)
+    if m == 0:
+        return f'{"-" if n < 0 else ""}0{" " if space else ""}'
     e = int(math.log10(m))
     d = min((e//3)*3, 12)
     c = {0: '', 3: 'k', 6: 'M', 9: 'B', 12: 'T'}[d]
@@ -154,7 +157,7 @@ def split_into_rows(inlist, m = 5):
 def split_into_chunks(inlist, m = 10):
     n = len(inlist)
     r = [ n//m + (i<n%m) for i in range(m) ]
-    s = [0] + [ sum(r[:x]) for x in range(m) ]
+    s = [ sum(r[:x]) for x in range(m+1) ]
     return  [ inlist[i:j] for i, j in zip(s[:-1], s[1:]) ]
 
 ###########################
@@ -224,6 +227,24 @@ def dict_update(A, B, inplace = False):
             A[key] = value
     return A
 
+def dict_compare(A, B):
+    """Compare two dictionaries and return basic differences."""
+    differences = {}
+    
+    # Keys in A not in B or with different values
+    for key in A:
+        if key not in B:
+            differences[key] = {'in_A': A[key], 'in_B': None}
+        elif A[key] != B[key]:
+            differences[key] = {'in_A': A[key], 'in_B': B[key]}
+    
+    # Keys in B not in A
+    for key in B:
+        if key not in A:
+            differences[key] = {'in_A': None, 'in_B': B[key]}
+    
+    return differences
+
 ########################################################################
 ########################################################################
 ### LOGGING:
@@ -231,32 +252,38 @@ def dict_update(A, B, inplace = False):
 # add color formatting?
 
 def setup_logger(
-        name,
+        name    = 'kctools',
         path    = '',
         mode    = 'a',
         level   = 'debug',
-        f_level = 'warning'
+        f_level = 'debug',
+        console = True,
+        c_level = 'debug'
     ):
-    
+
     fmt     = '%(asctime)s  %(levelname).4s: %(message)s'
     datefmt = '%Y.%m.%d  %H:%M:%S'
-    level   = getattr(logging, level.upper()) if isinstance(level, str) else level
+    level = getattr(logging, level.upper()) if isinstance(level, str) else level
+    c_level = getattr(logging, c_level.upper()) if isinstance(c_level, str) else c_level
     f_level = getattr(logging, f_level.upper()) if isinstance(f_level, str) else f_level
 
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    for handler in logger.handlers:
+    for handler in logger.handlers[:]:
         if isinstance(handler, logging.StreamHandler):
             logger.removeHandler(handler)
     
-    s_handler = logging.StreamHandler(stream=sys.stdout)
-    s_handler.setLevel(level)
-    s_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
-    logger.addHandler(s_handler)
+    if console:
+        s_handler = logging.StreamHandler(stream=sys.stdout)
+        s_handler.setLevel(c_level)
+        s_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
+        logger.addHandler(s_handler)
     
     if path:
-        os.makedirs(os.path.dirname(path), exist_ok = True)
+        dirname = os.path.dirname(path)
+        if dirname:
+            os.makedirs(dirname, exist_ok = True)
         f_handler = logging.FileHandler(path, mode)
         f_handler.setLevel(f_level)
         f_handler.setFormatter(logging.Formatter(fmt=fmt, datefmt=datefmt))
@@ -269,15 +296,18 @@ def setup_logger(
 ### NUMBERS: 
 
 def mround(x, m):
-    return int(m * round(float(x)/m))
+    if not m:
+        return x
+    y = m * round(float(x)/abs(m))
+    return int(y) if m >= 1 else y
 
-def choose(x, y, other = None):
+def compare(x, y, other = None):
     i = x > other if other is not None else True
     j = y > other if other is not None else True
     if i ^ j:
         return x if i else y
     else:
-        return x if y < x else y
+        return x if x > y else y
 
 def coalesce(*values):
     y = 0
@@ -366,18 +396,6 @@ def conf_bounds(ups, downs, conf = 0.683):
 
 ########################################################################
 ########################################################################
-### PANDAS:
-
-@pd_check
-def rename_dup_df_cols(df, sep = '.'):
-    names = pd.Series(df.columns)
-    for dup in df.columns.get_duplicates():
-        d_mask = df.columns.get_loc(dup)
-        names[d_mask] = [ f'{dup}{sep}{ddx}' for ddx in range(d_mask.sum()) ]
-    df.columns = names
-
-########################################################################
-########################################################################
 ### MATPLOTLIB:
 
 @mpl_check
@@ -414,10 +432,10 @@ def make_heatmap(
         fmt = 'd' 
         data = data.astype(int)
 
-    if not xlabels:
-        xlabels = [ str(i) for i in range(len(data[0])) ]
-    if not ylabels:
-        ylabels = [ str(i) for i in range(len(data[1])) ]
+    if xlabels is None:
+        xlabels = [ str(i) for i in range(data.shape[0]) ]
+    if ylabels is None:
+        ylabels = [ str(i) for i in range(data.shape[1]) ]
 
     #########
 

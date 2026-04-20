@@ -3,6 +3,10 @@ import inspect
 _cache = {}
 
 
+def clear_cache():
+    _cache.clear()
+
+
 def cached(method):
 
     sig = inspect.signature(method)
@@ -10,10 +14,11 @@ def cached(method):
     def new_method(*args, **kwargs):
 
         '''
-            key = name + concat( current value for every parameter in the signature )
+            key = full.path.name + concat( current value for every parameter in the signature )
         '''
         
-        key = [ method.__name__ ]
+        key = [ method.__qualname__ ]
+
         for pdx, (name, param) in enumerate(sig.parameters.items()):
             if pdx < len(args):
                 key.append(args[pdx])
@@ -21,6 +26,7 @@ def cached(method):
                 key.append(kwargs[name])
             else:
                 key.append(param.default)
+
         key = '_'.join( str(k) for k in key )
 
         try:
@@ -31,7 +37,7 @@ def cached(method):
 
         return value
 
+    new_method.__name__ = method.__name__
     new_method.__signature__ = sig
 
     return new_method
-

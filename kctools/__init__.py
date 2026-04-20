@@ -23,7 +23,7 @@ from .kctools import invert
 from .kctools import dict_update
 from .kctools import setup_logger
 from .kctools import mround
-from .kctools import choose
+from .kctools import compare
 from .kctools import coalesce
 from .kctools import normalize
 from .kctools import is_diagonal
@@ -37,15 +37,15 @@ from .kctools import rchoice
 from .kctools import lower_conf_bound
 from .kctools import upper_conf_bound
 from .kctools import conf_bounds
-from .kctools import rename_dup_df_cols
 from .kctools import make_heatmap
 
-from .classes.addict import addict
+from .classes.adict  import AddDict
 from .classes.cache  import cached
 from .classes.cuke   import Cuke
-from .classes.lock   import Lock
+from .classes.lock   import Lock, lockable
 from .classes.map    import Map
-from .classes.reg    import Register
-from .classes.roll   import R 
+from .classes.rec    import RecursiveDict
+from .classes.reg    import Register, Triggerable
+from .classes.roll   import factory
 from .classes.sub    import N
-from .classes.vec    import Vector, VecSet
+from .classes.vec    import Vector

@@ -1,4 +1,4 @@
-class Map():
+class Map:
 
     '''
         This class maps non-integer types to consecutive
@@ -6,9 +6,9 @@ class Map():
 
         Generally, these non-integers will be strings.
 
-        Map.keys()   returns the strings, in order.
-        Map.values() returns the integers, in order.
-        Map.items()  returns the tuples, as expected.
+        Map.keys()   generates the strings, in order.
+        Map.values() generates the integers, in order.
+        Map.items()  generates the tuples, as expected.
 
         Map[x] returns the corresponding value to x, ie:
           if x is a string, it returns the mapped integer,
@@ -27,7 +27,7 @@ class Map():
 
         Map.rem(x) is equivalent to Map.get(x), except any found elements
           are then removed from the Map, with integers collapsing downward
-          as appropriate to keep them sequential.
+          (depth first) as appropriate to keep them sequential.
     '''
 
     def __init__(self, inp = [], offset = 0):

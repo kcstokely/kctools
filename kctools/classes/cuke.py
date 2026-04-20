@@ -1,6 +1,6 @@
 import hashlib, os, pickle
 
-class Cuke():
+class Cuke:
     
     '''
         This is a class that can preserve itself
@@ -8,21 +8,23 @@ class Cuke():
     '''
     
     def __init__(self,
-        name,
+        label,
         abs_dir = '',         
         rel_dir = '',
         ext     = 'pkl',
-        xhash   = False
+        hash    = None
     ):
-        self.name = str(name)
-        assert self.name
+        if hash is True:
+            hash = hashlib.md5
+        self.label = str(label)
+        assert self.label
         cuke_dir = os.path.join(abs_dir, rel_dir)
         os.makedirs(cuke_dir, exist_ok = True)
-        token = name if not xhash else hashlib.md5(name.encode('utf-8')).hexdigest()
+        token = label if not hash else hash(label.encode('utf-8')).hexdigest()
         self._path = os.path.join(cuke_dir, f'{token}.{ext}')
 
     def __repr__(self):
-        return self._name
+        return self.label
 
     def read(self):
         with open(self._path, 'rb') as fp:
@@ -30,4 +32,4 @@ class Cuke():
     
     def write(self):
         with open(self._path, 'wb') as fp:
-            pickle.dump(self.__dict__.copy(), fp)
+            pickle.dump(self.__dict__, fp)

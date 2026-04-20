@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
-
 ################################
 class Register():
     
@@ -12,11 +11,11 @@ class Register():
 
           of objects which 'trigger' on occurance of an event.
 
-          Basically, you need a Register if you may
-            generate 'events' that other objects need
-            to know about.
+          Basically, you need a Register if you or another
+            object generate 'events' which other objects
+            need to know about.
     
-          These objects register with you, and if you ever
+          Those objects register with you, and if you ever
             generate the triggerable event, then you call
             their .trigger() method (with the event and
             yourself as arguments).
@@ -38,18 +37,17 @@ class Register():
                 events = obj.events()
             except AttributeError:
                 pass
-        
-        if not isinstance(events, list):
-            events = [ events ]
-        
-        for event in events:
-            self._reg[event].add(obj)
+            else:
+                if not isinstance(events, list):
+                    events = [ events ]
+                for event in events:
+                    self._reg[event].add(obj)
 
     ###
 
     def deregister(self, obj, events = None):
         
-        if events is not None:
+        if events is None:
             events = list(self._reg.keys())
         
         if not isinstance(events, list):
@@ -77,7 +75,7 @@ class Register():
                 
 
 ################################                
-def Triggerable(ABC):
+class Triggerable(ABC):
 
     '''
         You are triggerable if events affect you.
@@ -96,7 +94,7 @@ def Triggerable(ABC):
 
     @abstractmethod
     def trigger(self, event, registrar):
-        pass
+        return None
 
     @abstractmethod
     def events(self):

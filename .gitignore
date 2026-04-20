@@ -1,10 +1,11 @@
 *
 
-!.gitignore
 !README.md
 !LICENSE
 
 !/kctools/
 !/kctools/classes/
-!/kctools/classes/data/
+!/kctools/classes/subconf/
 !*.py
+
+/*.py
