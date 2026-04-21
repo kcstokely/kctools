@@ -36,12 +36,15 @@ class Register():
             try:
                 events = obj.events()
             except AttributeError:
-                pass
-            else:
-                if not isinstance(events, list):
-                    events = [ events ]
-                for event in events:
-                    self._reg[event].add(obj)
+                return
+        
+        if not events:
+            return
+        
+        if not isinstance(events, list):
+            events = [ events ]
+        for event in events:
+            self._reg[event].add(obj)
 
     ###
 

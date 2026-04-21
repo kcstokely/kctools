@@ -27,7 +27,7 @@ def cached(method):
             else:
                 key.append(param.default)
 
-        key = '_'.join( str(k) for k in key )
+        key = '_'.join( repr(k) for k in key )
 
         try:
             value = _cache[key]

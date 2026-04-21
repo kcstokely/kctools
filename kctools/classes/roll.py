@@ -18,7 +18,7 @@ _ORDER = [
 ]
 
 _ROLL = 'kqj'
-_KEEP = ['kqj09'] #['kqj', '09']
+_KEEP = ['kqj', '09']
 
 _WINS = ['aa', 'a0', 'a9']
 
@@ -26,9 +26,7 @@ _UPSETS = [{
       'k9': ['qj'],
       'k0': ['jj'],
       'q0': ['kj'],
-      'q9': ['kq']
     },{
-      'q0': ['kj'],
       'j0': ['qq'],
       'j9': ['kk'],
       'q9': ['kq']
@@ -354,7 +352,7 @@ def factory(**kwargs):
         def option_wins(self, opt, *, highest = False, naive = False, target = None, semi = None):
             '''
                 starting from self
-                weighted sum over all second rolls, for given option
+                weighted sum over all second rolls, for given strategy
             '''
             if opt == 'best':
                 return self.optimal(highest=highest, naive=naive, target=target, semi=semi)
@@ -374,7 +372,7 @@ def factory(**kwargs):
         def optimal(self, *, highest = False, naive = False, target = None, semi = None):
             '''
                 starting from self
-                weighted sum over all second rolls, for best option
+                weighted sum over all second rolls, for best strategy
             '''
             data = []
             for opt in self.options(highest=highest, naive=naive, target=target, semi=semi):

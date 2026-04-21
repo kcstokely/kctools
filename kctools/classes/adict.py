@@ -27,16 +27,18 @@ class AddDict(dict):
     def __add__(self, other):
         
         if not isinstance(other, dict):
-            raise TypeError(f"unsupported operand type(s) for +: 'type(self)' and '{type(other)}'")
+            raise TypeError(f"unsupported operand type(s) for +: '{type(self)}' and '{type(other)}'")
 
         this = deepcopy(self)
         
         for attr, value in other.items():
 
             if attr in this:
-                if isinstance(this[attr], ADict):
-                    this[attr] = this[attr] + type(this[attr])(value)
-                elif isinstance(this[attr], (set, dict)):
+                if isinstance(this[attr], AddDict):
+                    this[attr] = this[attr] + value
+                elif isinstance(this[attr], dict):
+                    this[attr] = AddDict(this[attr]) + value
+                elif isinstance(this[attr], set):
                     this[attr].update(value)
                 else:
                     this[attr] = this[attr] + type(this[attr])(value)

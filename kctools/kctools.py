@@ -1,4 +1,5 @@
 import datetime as dt
+import functools
 import logging, math, os, re, string, sys
 
 from copy        import deepcopy
@@ -21,6 +22,7 @@ if is_mpl:
     from matplotlib import pyplot as plt
 
 def np_check(method):
+    @functools.wraps(method)
     def wrapped(*args, **kwargs):
         if is_np:
             return method(*args, **kwargs)
@@ -29,6 +31,7 @@ def np_check(method):
     return wrapped
 
 def pd_check(method):
+    @functools.wraps(method)
     def wrapped(*args, **kwargs):
         if is_pd:
             return method(*args, **kwargs)
@@ -37,6 +40,7 @@ def pd_check(method):
     return wrapped
 
 def npd_check(method):
+    @functools.wraps(method)
     def wrapped(*args, **kwargs):
         if is_np:
             return method(*args, **kwargs)
@@ -45,6 +49,7 @@ def npd_check(method):
     return wrapped
 
 def sci_check(method):
+    @functools.wraps(method)
     def wrapped(*args, **kwargs):
         if is_sci:
             return method(*args, **kwargs)
@@ -53,6 +58,7 @@ def sci_check(method):
     return wrapped
      
 def mpl_check(method):
+    @functools.wraps(method)
     def wrapped(*args, **kwargs):
         if is_mpl:
             return method(*args, **kwargs)
@@ -222,28 +228,22 @@ def dict_update(A, B, inplace = False):
         A = deepcopy(A)
     for key, value in B.items():
         if key in A and isinstance(value, dict):
-            A[key] = dict_update(A[key], value)
+            A[key] = dict_update(A[key], value, inplace=inplace)
         else:
             A[key] = value
     return A
 
 def dict_compare(A, B):
-    """Compare two dictionaries and return basic differences."""
-    differences = {}
-    
-    # Keys in A not in B or with different values
+    diff = {}
     for key in A:
         if key not in B:
-            differences[key] = {'in_A': A[key], 'in_B': None}
+            diff[key] = {'A': A[key], 'B': None}
         elif A[key] != B[key]:
-            differences[key] = {'in_A': A[key], 'in_B': B[key]}
-    
-    # Keys in B not in A
+            diff[key] = {'A': A[key], 'B': B[key]}
     for key in B:
         if key not in A:
-            differences[key] = {'in_A': None, 'in_B': B[key]}
-    
-    return differences
+            diff[key] = {'A': None, 'B': B[key]}
+    return diff
 
 ########################################################################
 ########################################################################
@@ -433,9 +433,9 @@ def make_heatmap(
         data = data.astype(int)
 
     if xlabels is None:
-        xlabels = [ str(i) for i in range(data.shape[0]) ]
+        xlabels = [ str(i) for i in range(data.shape[1]) ]
     if ylabels is None:
-        ylabels = [ str(i) for i in range(data.shape[1]) ]
+        ylabels = [ str(i) for i in range(data.shape[0]) ]
 
     #########
 

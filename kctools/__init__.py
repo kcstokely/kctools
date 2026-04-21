@@ -21,6 +21,7 @@ from .kctools import vivify
 from .kctools import mortify
 from .kctools import invert
 from .kctools import dict_update
+from .kctools import dict_compare
 from .kctools import setup_logger
 from .kctools import mround
 from .kctools import compare
@@ -40,7 +41,7 @@ from .kctools import conf_bounds
 from .kctools import make_heatmap
 
 from .classes.adict  import AddDict
-from .classes.cache  import cached
+from .classes.cache  import cached, clear_cache
 from .classes.cuke   import Cuke
 from .classes.lock   import Lock, lockable
 from .classes.map    import Map

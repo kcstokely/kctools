@@ -20,3 +20,4 @@ class RecursiveDict(dict):
                         value += x
             if value is None:
                 raise KeyError
+        return value

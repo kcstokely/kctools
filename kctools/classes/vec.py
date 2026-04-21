@@ -6,7 +6,7 @@ from .rec import RecursiveDict
 class Vector(AddDict, RecursiveDict):
 
     '''
-        Addict with some maybe convenient methods for chaining operations.
+        AddDict with some maybe convenient methods for chaining operations.
     '''
 
     def __init__(self, *args, **kwargs):
@@ -22,7 +22,7 @@ class Vector(AddDict, RecursiveDict):
         return Vector(self.items())
     
     def recall(self):
-        self = self._snap
+        self.__dict__.update(self._snap.__dict__)
         return self
     
     def snapshot(self):

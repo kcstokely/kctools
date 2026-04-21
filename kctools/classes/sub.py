@@ -117,7 +117,7 @@ class N:
     def __add__(self, other):
         try:
             other = N(other)
-        except:
+        except Exception:
             raise TypeError
         return N(self).add(other)
 
@@ -127,14 +127,14 @@ class N:
     def __sub__(self, other):
         try:
             other = N(other)
-        except:
+        except Exception:
             raise TypeError
         return N(self).sub(other)
     
     def __rsub__(self, other):
         try:
             other = N(other)
-        except:
+        except Exception:
             raise TypeError
         return other.sub(N(self))
         

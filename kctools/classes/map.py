@@ -96,13 +96,13 @@ class Map:
     ############
 
     def get(self, thing):
-        if type(thing) in (list, tuple):
+        if isinstance(thing, (list, tuple)):
             return [ self.get(x) for x in thing ]
         else:
             return self[thing]
     
     def add(self, thing):
-        if type(thing) in (list, tuple):
+        if isinstance(thing, (list, tuple)):
             for item in thing:
                 self.add(item)
         else:
@@ -111,8 +111,8 @@ class Map:
 
     def rem(self, thing):
         thing_two = self.get(thing)
-        if type(thing) in (list, tuple):
-            for item in self.get(thing_two):
+        if isinstance(thing_two, (list, tuple)):
+            for item in thing_two:
                 self.rem(item)
         else:
             self._rem_item(thing)
