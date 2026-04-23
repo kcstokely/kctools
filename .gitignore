@@ -6,6 +6,14 @@
 !/kctools/
 !/kctools/classes/
 !/kctools/classes/subconf/
+
 !*.py
+!*.json
+!*.yaml
+!*.toml
+!*.csv
+!*.txt
 
 /*.py
+/*.toml
+
