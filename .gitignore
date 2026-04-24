@@ -1,19 +1,25 @@
 *
-
+ 
+!.gitignore
 !README.md
 !LICENSE
-
+ 
 !/kctools/
 !/kctools/classes/
 !/kctools/classes/subconf/
-
+ 
 !*.py
-!*.json
-!*.yaml
-!*.toml
 !*.csv
 !*.txt
+!*.json
+!*.toml
+!*.yaml
 
 /*.py
+/*.csv
+/*.txt
+/*.json
 /*.toml
+/*.yaml
 
+!pyproject.toml

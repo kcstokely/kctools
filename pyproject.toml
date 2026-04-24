@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+ 
+[project]
+name = "kctools"
+version = "26.4.2"
+description = "miscellaneous elves"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "MIT"}
+authors = [
+    {name = "kevin c. stokely", email = "kcstokely@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+]
+ 
+[project.urls]
+Homepage = "https://github.com/kcstokely/kctools"
+ 
+[project.optional-dependencies]
+numpy = ["numpy"]
+pandas = ["pandas"]
+scipy = ["scipy"]
+matplotlib = ["matplotlib"]
+tqdm = ["tqdm"]
+all = ["numpy", "pandas", "scipy", "matplotlib", "tqdm"]

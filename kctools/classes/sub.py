@@ -49,15 +49,17 @@ class N:
     
     _L = 12 # overwrite to warp spacetime
     
-    def perfect(self = None, L = _L):
-        f = np.power(2, 1/L)
-        x = [ 1 ]
-        while len(x) < L-1:
-            x.append(x[-1]*f)
-        y = [ np.abs(i-3/2) for i in x ]
-        return y.index(min(y))
-    
-    _P = perfect()
+    if is_np:
+
+        def perfect(self = None, L = _L):
+            f = np.power(2, 1/L)
+            x = [ 1 ]
+            while len(x) < L-1:
+                x.append(x[-1]*f)
+            y = [ np.abs(i-3/2) for i in x ]
+            return y.index(min(y))
+
+        _P = perfect()
 
     ############ BIRTH
     
