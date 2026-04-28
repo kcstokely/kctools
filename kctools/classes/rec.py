@@ -2,7 +2,7 @@ class RecursiveDict(dict):
 
     def __getitem__(self, key):
         try:
-            value = dict.__getitem__(key)
+            value = super().__getitem__(key)
         except KeyError:
             value = None
         if isinstance(value, dict):

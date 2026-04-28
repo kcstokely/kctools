@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from ..kctools import coalesce
 from .adict import AddDict
 from .rec import RecursiveDict
@@ -19,14 +21,19 @@ class Vector(AddDict, RecursiveDict):
     ###
     
     def copy(self):
-        return Vector(self.items())
+        return deepcopy(self)
     
     def recall(self):
-        self.__dict__.update(self._snap.__dict__)
+        self.clear()
+        self.update(self._snap['dict'])
+        self.__dict__.update(self._snap['attr'])
         return self
     
     def snapshot(self):
-        self._snap = self.copy()
+        self._snap = {
+            'dict': deepcopy(dict(self)),
+            'attr': deepcopy({k: v for k, v in self.__dict__.items() if k != '_snap'})
+        }
         return self
 
     def snap(self):
